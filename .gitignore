@@ -1,0 +1,33 @@
+.cache
+
+
+### GRADLE ###
+.gradle
+/build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+nbproject/private/
+schedule-clien/build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+### Jrebel ###
+rebel.xml

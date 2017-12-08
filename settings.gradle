@@ -1,0 +1,4 @@
+rootProject.name = 'newstudy'
+include 'javase-tutorial'
+include 'temp-test'
+

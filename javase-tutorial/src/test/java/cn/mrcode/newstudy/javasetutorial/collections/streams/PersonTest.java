@@ -4,9 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -171,5 +169,117 @@ public class PersonTest {
                         ));
 
         System.out.println(averageAgeByGender);
+    }
+
+    @Test
+    public void fun11() {
+        Integer[] intArray = {1, 2, 3, 4, 5, 6, 7, 8};
+        List<Integer> listOfIntegers =
+                new ArrayList<>(Arrays.asList(intArray));
+
+        System.out.println("listOfIntegers:");
+        listOfIntegers
+                .stream()
+                .forEach(e -> System.out.print(e + " "));
+        System.out.println("");
+
+        System.out.println("listOfIntegers sorted in reverse order:");
+        Comparator<Integer> normal = Integer::compare;
+        Comparator<Integer> reversed = normal.reversed();
+        Collections.sort(listOfIntegers, reversed);
+        listOfIntegers
+                .stream()
+                .forEach(e -> System.out.print(e + " "));
+        System.out.println("");
+
+        System.out.println("Parallel stream");
+        listOfIntegers
+                .parallelStream()
+                .forEach(e -> System.out.print(e + " "));
+        System.out.println("");
+
+        System.out.println("Another parallel stream:");
+        listOfIntegers
+                .parallelStream()
+                .forEach(e -> System.out.print(e + " "));
+        System.out.println("");
+
+        System.out.println("With forEachOrdered:");
+        listOfIntegers
+                .parallelStream()
+                .forEachOrdered(e -> System.out.print(e + " "));
+        System.out.println("");
+    }
+
+    @Test
+    public void fun12() {
+        try {
+            List<String> listOfStrings =
+                    new ArrayList<>(Arrays.asList("one", "two"));
+
+            // This will fail as the peek operation will attempt to add the
+            // string "three" to the source after the terminal operation has
+            // commenced.
+
+            String concatenatedString = listOfStrings
+                    .stream()
+
+                    // 不要这样做，干扰发生在这里
+                    .peek(s -> listOfStrings.add("three"))
+
+                    .reduce((a, b) -> a + " " + b)
+                    .get();
+
+            System.out.println("Concatenated string: " + concatenatedString);
+
+        } catch (Exception e) {
+            System.out.println("Exception caught: " + e.toString());
+        }
+    }
+
+    @Test
+    public void fun14() {
+        List<Integer> listOfIntegers =
+                new ArrayList<>(Arrays.asList(8, 7, 6, 5, 4, 3, 2, 1));
+        List<Integer> serialStorage = new ArrayList<>();
+
+        System.out.println("Serial stream:");
+        listOfIntegers
+                .stream()
+
+                // 不要这样做，使用一个有状态的拉姆达表达式
+                .map(e -> {
+                    serialStorage.add(e);
+                    return e;
+                })
+
+                .forEachOrdered(e -> System.out.print(e + " "));
+        System.out.println("");
+
+        serialStorage
+                .stream()
+                .forEachOrdered(e -> System.out.print(e + " "));
+        System.out.println("");
+
+        System.out.println("Parallel stream:");
+        List<Integer> /*parallelStorage = Collections.synchronizedList(
+                new ArrayList<>());*/
+        parallelStorage = new ArrayList<>();
+        listOfIntegers
+                .parallelStream()
+
+                // Don't do this! It uses a stateful lambda expression.
+                .map(e -> {
+                    parallelStorage.add(e);
+                    return e;
+                })
+
+                .forEachOrdered(e -> System.out.print(e + " "));
+        System.out.println("");
+
+        parallelStorage
+                .stream()
+                .forEachOrdered(e -> System.out.print(e + " "));
+        System.out.println("");
     }
 }

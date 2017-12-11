@@ -264,7 +264,7 @@ public class PersonTest {
         System.out.println("Parallel stream:");
         List<Integer> /*parallelStorage = Collections.synchronizedList(
                 new ArrayList<>());*/
-        parallelStorage = new ArrayList<>();
+                parallelStorage = new ArrayList<>();
         listOfIntegers
                 .parallelStream()
 
@@ -280,6 +280,77 @@ public class PersonTest {
         parallelStorage
                 .stream()
                 .forEachOrdered(e -> System.out.print(e + " "));
+        System.out.println("");
+    }
+
+    @Test
+    public void fun15() {
+        for (Person p : roster) {
+            if (p.getGender() == Person.Sex.MALE) {
+                System.out.println(p.getName());
+            }
+        }
+
+        roster.stream()
+                .filter(p -> p.getGender() == Person.Sex.MALE)
+                .forEach(p -> {
+                    System.out.println(p.getName());
+                });
+        roster.stream()
+                .filter(p -> p.getGender() == Person.Sex.MALE)
+                .map(p -> p.getName())
+                .forEach(name -> System.out.println(name));
+    }
+
+
+    public List<Album> mockAlbums() {
+        List<Album> albums = new ArrayList<>();
+        // 模拟数据
+        for (int i = 0; i < 5; i++) {
+            ArrayList<Track> tracks = new ArrayList<>();
+            albums.add(new Album("A" + i, tracks));
+            for (int j = 0; j < 5; j++) {
+                tracks.add(new Track(j));
+            }
+        }
+        Collections.shuffle(albums);
+
+        return albums;
+    }
+
+    @Test
+    public void fun16() {
+
+        List<Album> albums = mockAlbums();
+        // 题目
+        List<Album> favs = new ArrayList<>();
+        for (Album a : albums) {
+            boolean hasFavorite = false;
+            for (Track t : a.getTracks()) {
+                if (t.getRating() >= 4) {
+                    hasFavorite = true;
+                    break;
+                }
+            }
+            if (hasFavorite)
+                favs.add(a);
+        }
+        Collections.sort(favs, new Comparator<Album>() {
+            public int compare(Album a1, Album a2) {
+                return a1.getName().compareTo(a2.getName());
+            }
+        });
+        System.out.println("");
+    }
+
+    @Test
+    public void fun17() {
+        List<Album> albums = mockAlbums();
+
+        albums.stream()
+                .filter(a -> a.getTracks().stream().anyMatch(t -> t.getRating() >= 4))
+                .sorted(Comparator.comparing(Album::getName))
+                .collect(Collectors.toList());
         System.out.println("");
     }
 }

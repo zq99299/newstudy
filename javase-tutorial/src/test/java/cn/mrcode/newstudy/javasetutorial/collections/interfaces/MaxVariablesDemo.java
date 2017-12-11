@@ -1,0 +1,56 @@
+package cn.mrcode.newstudy.javasetutorial.collections.interfaces;
+
+/**
+ * <pre>
+ *  Version         Date            Author          Description
+ * ---------------------------------------------------------------------------------------
+ *  1.0.0           2017/12/09     zhuqiang        -
+ * </pre>
+ * @author zhuqiang
+ * @version 1.0.0 2017/12/9 14:07
+ * @date 2017/12/9 14:07
+ * @since 1.0.0
+ */
+public class MaxVariablesDemo {
+    public static void main(String args[]) {
+
+        //integers
+        byte largestByte = Byte.MAX_VALUE;
+        short largestShort = Short.MAX_VALUE;
+        int largestInteger = Integer.MAX_VALUE;
+        long largestLong = Long.MAX_VALUE;
+
+        //real numbers
+        float largestFloat = Float.MAX_VALUE;
+        double largestDouble = Double.MAX_VALUE;
+
+        //other primitive types
+        char aChar = 'S';
+        boolean aBoolean = true;
+
+        //Display them all.
+        System.out.println("The largest byte value is "
+                                   + largestByte + ".");
+        System.out.println("The largest short value is "
+                                   + largestShort + ".");
+        System.out.println("The largest integer value is "
+                                   + largestInteger + ".");
+        System.out.println("The largest long value is "
+                                   + largestLong + ".");
+
+        System.out.println("The largest float value is "
+                                   + largestFloat + ".");
+        System.out.println("The largest double value is "
+                                   + largestDouble + ".");
+
+        if (Character.isUpperCase(aChar)) {
+            System.out.println("The character " + aChar
+                                       + " is uppercase.");
+        } else {
+            System.out.println("The character " + aChar
+                                       + " is lowercase.");
+        }
+        System.out.println("The value of aBoolean is "
+                                   + aBoolean + ".");
+    }
+}

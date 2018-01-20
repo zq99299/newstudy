@@ -1,5 +1,7 @@
 package cn.mrcode.newstudy.temptest;
 
+import java.util.stream.IntStream;
+
 /**
  * <pre>
  *  Version         Date            Author          Description
@@ -12,4 +14,12 @@ package cn.mrcode.newstudy.temptest;
  * @since 1.0.0
  */
 public class Test {
+    public static void main(String[] args) {
+        doIt();
+    }
+    public static void doIt() {
+        IntStream.range(0, 1).forEach(i -> {
+            System.out.println(Thread.currentThread().getName() + " 生产 " + i);
+        });
+    }
 }

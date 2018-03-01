@@ -10,6 +10,6 @@
 如果没有翻墙，gitbook打不开，就只能暂时看GITHUB的原始文件了
 
 | 项目 | 描述 | GITBOOK笔记 | GITHUB笔记|
-|-------|------|
+|-------|------|------|----------|
 | java-tutorial | [官网教程阅读笔记](https://www.gitbook.com/book/zq99299/java-tutorial/details)  | - |
 | hp-base | [Java高端基础](https://www.gitbook.com/book/zq99299/hp-note/details)  |  [Java高端基础](https://github.com/zq99299/hp-note/blob/master/SUMMARY.md) |

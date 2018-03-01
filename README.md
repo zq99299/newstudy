@@ -11,5 +11,5 @@
 
 | 项目 | 描述 | GITBOOK笔记 | GITHUB笔记|
 |-------|------|------|----------|
-| java-tutorial | [官网教程阅读笔记](https://www.gitbook.com/book/zq99299/java-tutorial/details)  | - |
-| hp-base | [Java高端基础](https://www.gitbook.com/book/zq99299/hp-note/details)  |  [Java高端基础](https://github.com/zq99299/hp-note/blob/master/SUMMARY.md) |
+| java-tutorial | Java官网阅读笔记的练习项目 |[官网教程阅读笔记](https://www.gitbook.com/book/zq99299/java-tutorial/details)  | - |
+| hp-base | JAVA高端基础练习项目 | [Java高端基础](https://www.gitbook.com/book/zq99299/hp-note/details)  |  [Java高端基础](https://github.com/zq99299/hp-note/blob/master/SUMMARY.md) |

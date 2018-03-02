@@ -9,6 +9,8 @@ import java.util.Arrays;
  * @date : 2018/3/2 23:08
  */
 public class QuickSort {
+    public static boolean log = true;
+
     public static void sort(int[] arr) {
         if (arr.length > 0) {
             sort(arr, 0, arr.length - 1);
@@ -45,16 +47,18 @@ public class QuickSort {
          */
         int base = arr[lowIndex]; // 基准值
         while (lowIndex < hightIndex) {
-            System.out.println("-------------------- 基准：" + base);
-            System.out.println("找数之前：" + Arrays.toString(arr));
-            // 找到比基准值小的数
+            if (log) {
+                System.out.println("-------------------- 基准：" + base);
+                System.out.println("找数之前：" + Arrays.toString(arr));
+            }
+            // / 找到比基准值小的数
             while (lowIndex < hightIndex && arr[hightIndex] >= base) {
                 hightIndex--;
             }
             // 找到比基准值小的数，然后把基准所在的位置 设置上这个小的值
             // 要记得最开始已经把基准索引的值保存为 base了
             arr[lowIndex] = arr[hightIndex];
-            System.out.println("找到小数：" + Arrays.toString(arr));
+            if (log) System.out.println("找到小数：" + Arrays.toString(arr));
             // 然后找到比基准大的数
             while (lowIndex < hightIndex && arr[lowIndex] <= base) {
                 lowIndex++;
@@ -62,11 +66,11 @@ public class QuickSort {
 
             // 然后把高位的数设置为这个比基准大的数
             arr[hightIndex] = arr[lowIndex];
-            System.out.println("找到大数：" + Arrays.toString(arr));
+            if (log) System.out.println("找到大数：" + Arrays.toString(arr));
         }
         // 把当前位置的值设置为基准数
         arr[lowIndex] = base;
-        System.out.println("填回枢轴：" + Arrays.toString(arr));
+        if (log) System.out.println("填回枢轴：" + Arrays.toString(arr));
         return lowIndex;
     }
 }

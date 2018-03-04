@@ -2,6 +2,7 @@ package cn.mrcode.newstudy.hpbase._01.q07;
 
 import cn.mrcode.newstudy.hpbase._01.Practice_04;
 import cn.mrcode.newstudy.hpbase._01.Salary;
+import cn.mrcode.newstudy.hpbase._01.q05.MyItem;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -26,7 +27,7 @@ import java.util.Comparator;
  * @date : 2018/3/2 22:35
  */
 public class Practice07 {
-    // 快速排序
+    // 加分题01：快速排序
     @Test
     public void quickSortTest() {
         int[] arr = {6, 8, 1, 3, 2, 6, 4};
@@ -35,6 +36,7 @@ public class Practice07 {
         System.out.println("排序后：" + Arrays.toString(arr));
     }
 
+    // 加分题01：冒泡排序
     @Test
     public void bubblingTest() {
         int[] arr = {6, 8, 1, 3, 2, 6, 4};
@@ -56,7 +58,7 @@ public class Practice07 {
         }
     }
 
-    // 对 salary使用快速排序
+    // 加分题01：对 salary使用快速排序
     @Test
     public void salaryQuickSort() {
         Salary[] salaries = Practice_04.mockData();
@@ -72,7 +74,7 @@ public class Practice07 {
         printTopN(salaries, 100);
     }
 
-    // 对 salary使用冒泡排序
+    // 加分题01：对 salary使用冒泡排序
     @Test
     public void salaryBubbling() {
         Salary[] salaries = Practice_04.mockData();
@@ -94,7 +96,7 @@ public class Practice07 {
         }
     }
 
-    public static <T> void bubblingSort(T[] arr, Comparator<? super T> c) {
+    private <T> void bubblingSort(T[] arr, Comparator<? super T> c) {
         int length = arr.length;
         for (int i = 0; i < length; i++) {
             for (int j = i + 1; j < length; j++) {
@@ -107,5 +109,34 @@ public class Practice07 {
                 }
             }
         }
+    }
+
+    // 对第5题进行改写后的测试
+    @Test
+    public void storeByteTest() {
+        ByteStore byteStore = new ByteStore();
+        MyItem item = new MyItem((byte) 1, (byte) 128, (byte) 3);
+        byteStore.putMyItem(0, item);
+        System.out.println(item);
+        MyItem myItem = byteStore.getMyItem(0);
+        System.out.println(myItem);
+        System.out.println(item.equals(myItem));
+        System.out.println("---------------------");
+
+        item = new MyItem((byte) 2, (byte) 3, (byte) 4);
+        byteStore.putMyItem(1, item);
+        System.out.println(item);
+        myItem = byteStore.getMyItem(1);
+        System.out.println(myItem);
+        System.out.println(item.equals(myItem));
+        System.out.println("---------------------");
+
+        item = new MyItem((byte) 5, (byte) -9, (byte) -4);
+        byteStore.putMyItem(2, item);
+        System.out.println(item);
+        myItem = byteStore.getMyItem(2);
+        System.out.println(myItem);
+        System.out.println(item.equals(myItem));
+        System.out.println("---------------------");
     }
 }

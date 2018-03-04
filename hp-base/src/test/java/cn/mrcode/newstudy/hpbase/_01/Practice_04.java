@@ -33,7 +33,7 @@ public class Practice_04 {
         }
     }
 
-    private static Salary[] mockData() {
+    public static Salary[] mockData() {
         Salary[] salaries = new Salary[10000];
         for (int i = 0; i < salaries.length; i++) {
             Salary salary = new Salary();

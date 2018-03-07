@@ -10,6 +10,11 @@ public class Salary {
     private int baseSalary;
     private int bonus;
 
+    /** 获取年薪 */
+    public int yearlySalary() {
+        return baseSalary * 13 + bonus;
+    }
+
     public String getName() {
         return name;
     }

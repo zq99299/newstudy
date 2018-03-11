@@ -6,6 +6,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -24,7 +26,7 @@ public class Practice {
     public void main() throws IOException {
         String filePath = "resources/_02/q04/salaries";
 
-        long start = System.currentTimeMillis();
+        Instant start = Instant.now();
         System.out.println("读取并解析...");
         FileChannelReader reader = new FileChannelReader(Paths.get(filePath));
         List<Salary> salaries = new ArrayList<>(1000 * 10000);
@@ -33,8 +35,8 @@ public class Practice {
             salaries.add(salary);
         });
 
-        System.out.println("解析结束，耗时 " + (System.currentTimeMillis() - start));
-        start = System.currentTimeMillis();
+        System.out.println("解析结束，耗时 " + Duration.between(start,Instant.now()).toMillis());
+        start = Instant.now();
         System.out.println("分组中...");
         List<SalaryGroup> groups = new ArrayList<>();
         salaries.stream()
@@ -46,8 +48,8 @@ public class Practice {
                     group.setSalarys(groupSalarys);
                     groups.add(group);
                 });
-        System.out.println("分组结束，耗时 " + (System.currentTimeMillis() - start));
-        start = System.currentTimeMillis();
+        System.out.println("分组结束，耗时 " + Duration.between(start,Instant.now()).toMillis());
+        start = Instant.now();
         System.out.println("排序中...");
         groups
                 .stream()
@@ -57,6 +59,6 @@ public class Practice {
                 .forEach(group -> {
                     System.out.println(group.getName() + " , " + group.getYearlySalaryTotal() + " , " + group.getSalarys().size());
                 });
-        System.out.println("排序结束，耗时 " + (System.currentTimeMillis() - start));
+        System.out.println("排序结束，耗时 " + Duration.between(start,Instant.now()).toMillis());
     }
 }

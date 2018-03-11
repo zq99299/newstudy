@@ -4,6 +4,8 @@ import cn.mrcode.newstudy.hpbase._01.Salary;
 import org.junit.Test;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,7 +36,8 @@ public class Practice {
 
         long start = System.currentTimeMillis();
         System.out.println("读取并解析...");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
+        BufferedReader reader = Files.newBufferedReader(Paths.get(filePath));
         String line = null;
         Map<String, SalaryGroup> groups = new HashMap<>();
         while ((line = reader.readLine()) != null) {

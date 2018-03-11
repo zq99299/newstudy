@@ -32,20 +32,14 @@ public class Practice {
 //        Salary[] salarys = Practice_04.mockData(1000 * 10000);
 //        writeFile(salarys);
 
+        long start = System.currentTimeMillis();
+        System.out.println("读取并解析...");
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filePath)));
         String line = null;
         Map<String, SalaryGroup> groups = new HashMap<>();
         while ((line = reader.readLine()) != null) {
-            String[] salaryPart = line.split("\t");
-            String name = salaryPart[0];
-            int baseSalary = Integer.valueOf(salaryPart[1]);
-            int bonus = Integer.valueOf(salaryPart[2]);
-
-            Salary salary = new Salary();
-            salary.setName(name);
-            salary.setBaseSalary(baseSalary);
-            salary.setBonus(bonus);
-            String namePrefix = name.substring(0, 2);
+            Salary salary = Salary.parse(line);
+            String namePrefix = salary.getName().substring(0, 2);
             if (!groups.containsKey(namePrefix)) {
                 groups.put(namePrefix, new SalaryGroup(namePrefix));
             }
@@ -53,7 +47,10 @@ public class Practice {
             salaryGroup.getSalarys().add(salary);
             salaryGroup.sum(salary.yearlySalary());
         }
-
+        reader.close();
+        System.out.println("解析结束，耗时 " + (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
+        System.out.println("排序中...");
         ArrayList<SalaryGroup> groupList = new ArrayList<>(groups.values());
         Collections.sort(groupList, (g1, g2) -> {
             Long yearlySalaryTotal1 = g1.getYearlySalaryTotal();
@@ -68,6 +65,7 @@ public class Practice {
             SalaryGroup group = groupList.get(i);
             System.out.println(group.getName() + " , " + group.getYearlySalaryTotal() + " , " + group.getSalarys().size());
         }
+        System.out.println("排序结束，耗时 " + (System.currentTimeMillis() - start));
     }
 
     private void writeFile(Salary[] salarys) {

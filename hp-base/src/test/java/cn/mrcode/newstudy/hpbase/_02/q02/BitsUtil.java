@@ -52,7 +52,6 @@ public class BitsUtil {
     }
 
     public static int getLittleItem(byte[] bytes) {
-        // 利用强转把高位去掉的特性
         return (bytes[0] & 0xFF)
                 + ((bytes[1] & 0xFF) << 8)
                 + ((bytes[2] & 0xFF) << 16)

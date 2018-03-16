@@ -35,8 +35,12 @@ public class Practice {
             salaries.add(salary);
         });
 
-        System.out.println("解析结束，耗时 " + Duration.between(start,Instant.now()).toMillis());
-        start = Instant.now();
+        System.out.println("解析结束，耗时 " + Duration.between(start, Instant.now()).toMillis());
+        groupAndSort(salaries);
+    }
+
+    public static void groupAndSort(List<Salary> salaries) {
+        Instant start = Instant.now();
         System.out.println("分组中...");
         List<SalaryGroup> groups = new ArrayList<>();
         salaries.stream()
@@ -48,7 +52,7 @@ public class Practice {
                     group.setSalarys(groupSalarys);
                     groups.add(group);
                 });
-        System.out.println("分组结束，耗时 " + Duration.between(start,Instant.now()).toMillis());
+        System.out.println("分组结束，耗时 " + Duration.between(start, Instant.now()).toMillis());
         start = Instant.now();
         System.out.println("排序中...");
         groups
@@ -59,6 +63,6 @@ public class Practice {
                 .forEach(group -> {
                     System.out.println(group.getName() + " , " + group.getYearlySalaryTotal() + " , " + group.getSalarys().size());
                 });
-        System.out.println("排序结束，耗时 " + Duration.between(start,Instant.now()).toMillis());
+        System.out.println("排序结束，耗时 " + Duration.between(start, Instant.now()).toMillis());
     }
 }

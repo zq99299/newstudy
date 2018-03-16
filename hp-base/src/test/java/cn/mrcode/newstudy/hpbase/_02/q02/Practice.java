@@ -21,7 +21,7 @@ public class Practice {
     // 大小头读取测试
     @Test
     public void main() {
-        int a = 10240;
+        int a = 1000;
 
         System.out.println("---- big endian");
         byte[] bigItem = BitsUtil.convertBigItem(a);

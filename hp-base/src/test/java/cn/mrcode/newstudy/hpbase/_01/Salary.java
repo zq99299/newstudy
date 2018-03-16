@@ -64,4 +64,17 @@ public class Salary implements Cloneable {
         }
         return null;
     }
+
+    public static Salary newSalary(String name, int baseSalary, int bonus) {
+        try {
+            Salary newSalary = (Salary) cloneSalary.clone();
+            newSalary.setName(name);
+            newSalary.setBaseSalary(baseSalary);
+            newSalary.setBonus(bonus);
+            return newSalary;
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

@@ -49,12 +49,12 @@ public class Practice_04 {
         return salaries;
     }
 
-    private static int build(int min, int max) {
+    public static int build(int min, int max) {
         return random.nextInt(max - min + 1) + min;
     }
 
 
-    private static String buildName() {
+    public static String buildName() {
         // ASCII 码，A = 65;Z=90
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < 5; i++) {

@@ -2,9 +2,11 @@ package cn.mrcode.newstudy.hpbase._04.functioninterface;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * @author : zhuqiang
@@ -121,5 +123,188 @@ public class Practice {
         };
         Apple red = new Apple("red", 120);
         System.out.println(uo.apply(red));
+    }
+
+    /** ==============    stream api ===================== */
+
+    // 无限流测试
+    @Test
+    public void generateTest() {
+        Stream.generate(Math::random).forEach(System.out::println);
+    }
+
+    // 无限流测试
+    @Test
+    public void iterateTest() {
+        // 第一个参数 是 初始值，第二个参数是 UnaryOperator 接口：接收一个T，返回一个T
+        Stream.iterate(0, n -> n + 1).forEach(System.out::println);
+    }
+
+    // 将一个流中的数据转换到另一个流中
+    // 流转换测试: 过滤
+    @Test
+    public void filterTest() {
+        IntStream.range(0, 10)
+                .filter(n -> n > 5)  // 只要大于5的值
+                .forEach(System.out::println);
+    }
+
+    // 流转换测试
+    @Test
+    public void mapTest() {
+        Integer[] arr = new Integer[]{1, 2, 3, 4, 5};
+        Stream.of(arr)
+                .map(n -> n + "_")  // 把int类型的转换为字符串： 数字流转换成字符串流
+                .forEach(n -> {
+                    System.out.println(n);
+                });
+    }
+
+    // 流转换: 展开流
+    @Test
+    public void flatMapTest() {
+        Stream<Integer> s1 = Stream.of(1, 2, 3, 4, 5);
+        // 每个元素 都转换成了一个Integer流
+        Stream<Stream<Integer>> arrs = s1.map(i -> Stream.iterate(1, n -> n + 1).limit(i));
+
+//        arrs.forEach(System.out::println);  // 使用该方法打印的肯定是每个流的地址
+
+        // 上一个流集合展开成一个流
+        Stream<Integer> integerStream = arrs.flatMap(n -> n);
+        integerStream.forEach(System.out::println);
+    }
+
+    // 提取子流
+    @Test
+    public void skipAndLimitTest() {
+        Stream<Integer> s1 = Stream.of(1, 2, 3, 4, 5);
+        s1.skip(3).forEach(System.out::println); // 跳过了3个元素，结果是 4,5
+
+        s1 = Stream.of(1, 2, 3, 4, 5); // 流只能使用一次，用完就被关闭了
+        s1.limit(3).forEach(System.out::println); // 只需要3个元素，结果是 1，2，3
+    }
+
+    // 组合流
+    @Test
+    public void concatTest() {
+        Stream<Integer> s1 = Stream.of(1, 2, 3, 4, 5);
+        Stream<Integer> s2 = Stream.of(6, 7, 8, 9, 10);
+
+        // 把s1 和 s2 合成一个流
+        Stream<Integer> s3 = Stream.concat(s1, s2);
+        s3.forEach(System.out::println);
+    }
+
+
+    // 有状态的转换： 去重
+    @Test
+    public void distinctTest() {
+        Stream<Integer> s1 = Stream.of(1, 2, 1, 2);
+        // 把流中的重复元素去除了
+        // 要去重必须的记住以前都去过的所有元素，所以这个是有状态的
+        s1.distinct().forEach(System.out::println);
+    }
+
+    // 有状态的转换： 排序
+    @Test
+    public void sortedTest() {
+        Stream<Integer> s1 = Stream.of(1, 2, 1, 2);
+        s1.sorted(
+                // 排序
+                Comparator.comparing(i -> (Integer) i) // 这里为啥要强转一下，这里的I好像是object
+                        .reversed()) // 改成降序：把结果反转
+                .forEach(System.out::println);
+    }
+
+
+    /** =====================  将结果收集到map中 ========================= **/
+    @Test
+    public void toMapTest() {
+        // 一个语言（中文名称）对应一个语言示例（对应的语言）
+        Stream<Locale> locales = Stream.of(Locale.getAvailableLocales());
+        Map<String, String> collect = locales.collect(
+                Collectors.toMap(
+                        l -> l.getDisplayLanguage(),
+                        l -> l.getDisplayLanguage(l),
+                        // 接收一个 BinaryOperator，又继承了BiFunction<T,T,T>，输入2个参数，返回一个参数
+                        // 当key重复的时候，定义使用哪一个key
+                        (oldVal, newVal) -> newVal
+                )
+        );
+        System.out.println();
+    }
+
+    @Test
+    public void toMapTest2() {
+        // 加入我们想知道指定国家中的所有语言
+        Stream<Locale> locales = Stream.of(Locale.getAvailableLocales());
+        Map<String, Set<String>> collect = locales.collect(
+                Collectors.toMap(
+                        l -> l.getDisplayCountry(),
+                        // 创建了一个set集合
+                        l -> Collections.singleton(l.getDisplayLanguage()),
+                        // 同一个国家再次出现的时候
+                        // 把oldVal 和 newVal 相加，然后新的set集合
+                        (oldVal, newVal) -> {
+                            HashSet<String> r = new HashSet<>(oldVal);
+                            r.addAll(newVal);
+                            return r;
+                        }
+                )
+        );
+        System.out.println();
+    }
+
+    @Test
+    public void toMapTest3() {
+        // 加入我们想知道指定国家中的所有语言
+        List<Apple> apps = Arrays.asList(
+                new Apple("red", 120),
+                new Apple("blue", 80),
+                new Apple("green", 10));
+
+        TreeMap<String, Apple> collect = apps.stream().collect(
+                Collectors.toMap(
+                        Apple::getColor,
+                        Function.identity(), // 如果还想返回本身对象，就可以用 identity
+                        (oldVal, newVal) -> {
+                            // 有相同key出现的时候，抛出异常
+                            throw new IllegalStateException();
+                        },
+                        TreeMap::new   // 默认返回的是hashmap，这里可以指定返回一种map类型
+                )
+        );
+        System.out.println();
+    }
+
+    /** =====================  分组和分片测试 ========================= **/
+    @Test
+    public void groupingBy() {
+        Stream<Locale> locales = Stream.of(Locale.getAvailableLocales());
+        // 按国家进行分组
+        Map<String, List<Locale>> collect = locales.collect(Collectors.groupingBy(Locale::getCountry));
+        System.out.println(collect);
+
+        // 只分为两组，en的为一组，其他的为一组
+        locales = Stream.of(Locale.getAvailableLocales());
+        Map<Boolean, List<Locale>> en = locales.collect(Collectors.partitioningBy(l -> l.getLanguage().equals("en")));
+        System.out.println(en.get(true));
+
+        // 我要返回set而不是list
+        locales = Stream.of(Locale.getAvailableLocales());
+        Map<String, Set<Locale>> collect1 = locales.collect(Collectors.groupingBy(Locale::getCountry, Collectors.toSet()));
+        System.out.println(collect1);
+
+    }
+
+    @Test
+    public void test() {
+        Stream.of("d2", "a2", "b1", "b3", "c")
+                .filter(s -> {
+                    System.out.println("filter: " + s);
+                    return true;
+                })
+                .forEach(s -> System.out.println("forEach: " + s));
+
     }
 }

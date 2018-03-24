@@ -20,6 +20,10 @@ public class SalaryGroup {
         this.name = name;
     }
 
+    public SalaryGroup() {
+
+    }
+
     public void sum(int yearlySalary) {
         this.yearlySalaryTotal += yearlySalary;
     }

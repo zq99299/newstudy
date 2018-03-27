@@ -1,0 +1,146 @@
+@startuml
+
+    interface Iterable{
+        1.5
+    }
+    interface Collection implements Iterable{
+        1.2
+    }
+
+
+    interface List implements Collection{
+        1.2
+    }
+    interface Set implements Collection{
+        1.2
+    }
+    interface Queue implements Collection{
+        1.5
+    }
+
+
+    abstract AbstractList implements List{
+        1.2
+    }
+
+    interface RandomAccess{
+        1.2
+    }
+
+    abstract AbstractSequentialList  extends AbstractList{
+        1.2
+    }
+
+    class ArrayList extends AbstractList implements RandomAccess{
+        1.2
+    }
+
+    class Vector  extends AbstractList implements RandomAccess {
+        1.2
+    }
+
+    class LinkedList extends AbstractSequentialList implements Deque{
+        1.2
+    }
+
+    class Stack extends Vector{
+        1.0
+    }
+
+    abstract AbstractSet implements Set{
+        1.2
+    }
+
+    interface SortedSet implements Set{
+        1.2
+    }
+
+    class HashSet extends AbstractSet{
+        1.2
+    }
+
+    class TreeSet extends AbstractSet implements NavigableSet{
+        1.2
+    }
+
+    class EnumSet extends AbstractSet{
+        1.5
+    }
+
+    class LinkedHashSet extends HashSet{
+        1.4
+    }
+    interface NavigableSet extends SortedSet{
+        1.6
+    }
+
+    interface Deque extends Queue{
+        1.6
+    }
+
+    abstract AbstractCollection implements Collection{
+        1.2
+    }
+
+    class ArrayDeque extends AbstractCollection implements Deque{
+        1.6
+    }
+
+    abstract AbstractQueue extends AbstractCollection implements Queue{
+        1.5
+    }
+
+    class PriorityQueue extends AbstractQueue{
+        1.5
+    }
+
+    interface BlockingQueue{
+        concurrent
+    }
+
+    class SynchronousQueue extends AbstractQueue implements BlockingQueue{
+        1.5
+    }
+
+
+    '============================ map
+
+    Interface Map{
+        1.2
+    }
+
+    interface SortedMap extends Map{
+        1.2
+    }
+    interface NavigableMap extends SortedMap{
+        1.6
+    }
+    abstract class AbstractMap implements Map{
+        1.2
+    }
+
+    class EnumMap extends AbstractMap{
+        1.5
+    }
+    class HashMap extends AbstractMap{
+        1.2
+    }
+    class Hashtable extends Dictionary implements Map{
+        1.0
+    }
+    class IdentityHashMap extends AbstractMap{
+        1.4
+    }
+    class LinkedHashMap extends HashMap{
+        1.4
+    }
+    class Properties extends Hashtable{
+        1.0
+    }
+    class TreeMap extends AbstractMap implements NavigableMap{
+        1.2
+    }
+    class WeakHashMap extends AbstractMap{
+        1.2
+    }
+@enduml

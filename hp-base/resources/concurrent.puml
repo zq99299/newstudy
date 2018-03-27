@@ -1,0 +1,73 @@
+@startuml
+
+package "concurrent" {
+   class CopyOnWriteArraySet extends AbstractSet{
+        1.5
+   }
+
+   class ConcurrentSkipListSet  extends AbstractSet implements NavigableSet{
+        1.6
+   }
+
+   interface BlockingQueue extends Queue{
+        1.5
+   }
+
+   interface BlockingDeque extends BlockingQueue,Deque{
+        1.6
+   }
+
+   class ConcurrentLinkedDeque extends AbstractCollection implements Deque{
+        1.7
+   }
+
+   class LinkedBlockingDeque extends AbstractQueue implements BlockingDeque{
+        1.6
+   }
+
+   class ConcurrentLinkedQueue  extends AbstractQueue{
+        1.5
+   }
+
+   class DelayQueue extends AbstractQueue implements BlockingQueue{
+       1.5
+   }
+
+    class ArrayBlockingQueue extends AbstractQueue implements BlockingQueue{
+        1.5
+    }
+
+    class LinkedBlockingQueue extends AbstractQueue implements BlockingQueue{
+        1.5
+    }
+
+    interface TransferQueue extends BlockingQueue{
+        1.7
+    }
+    class LinkedTransferQueue extends AbstractQueue implements TransferQueue{
+        1.7
+    }
+
+    class PriorityBlockingQueue extends AbstractQueue implements BlockingQueue{
+        1.5
+    }
+
+
+'========================================== map
+
+    interface ConcurrentMap extends Map{
+        1.5
+    }
+
+    class ConcurrentHashMap extends AbstractMap implements ConcurrentMap{
+        1.5
+    }
+    interface ConcurrentNavigableMap extends ConcurrentMap , NavigableMap{
+        1.6
+    }
+    class ConcurrentSkipListMap extends AbstractMap implements ConcurrentNavigableMap{
+        1.6
+    }
+}
+
+@enduml

@@ -106,7 +106,7 @@ public class VolatileTest {
                     b = 1;
                     a = 2;
                     System.out.println(Thread.currentThread().getName() + " a ,b已被修改");
-                    // 这里模拟了简断写，c一定不会被另外一个线程立即读取到
+                    // 这里模拟了耗时操作，c一定不会被另外一个线程立即读取到
                     // 但是 b ，a 的修改一定可以被立即读取到
                     TimeUnit.SECONDS.sleep(1);
                     c = 3;

@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.MessageFormat;
@@ -108,5 +109,11 @@ public class TestTest {
         channel.close();
         raf.close();
         // 这里很奇怪的问题是，在idea中没有看到文件有变化，但是用其他工具打开文件，的确被改写了
+    }
+
+    @Test
+    public void fun5(){
+        ByteBuffer buffer = ByteBuffer.allocate(100);
+        buffer.order(ByteOrder.BIG_ENDIAN).getInt();
     }
 }

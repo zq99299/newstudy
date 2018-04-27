@@ -44,7 +44,7 @@ public class Practice {
 
     public SearchResult searchInFiles(String key) {
         int maxDepth = 8;
-        Path root = Paths.get("G:\\dev\\project\\newstudy\\hp-base\\src");
+        Path root = Paths.get("f:\\dev\\project\\newstudy\\hp-base\\src");
         List<Path> paths = collectPath(root, maxDepth);
 
         SubTask task = new SubTask(paths, 0, paths.size(), key);
@@ -55,6 +55,7 @@ public class Practice {
             searchResult.setKey(key);
             searchResult.setMaxDepth(maxDepth);
             searchResult.setRootPath(root);
+            searchResult.setTotalCount(results.stream().mapToInt(Result::getCount).sum());
             return searchResult;
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,6 +157,7 @@ public class Practice {
         private String key;
         private int maxDepth;
         private Path rootPath;
+        private int totalCount;
 
         public SearchResult(List<Result> result) {
             this.result = result;
@@ -170,6 +172,7 @@ public class Practice {
             System.out.println("关键词：" + key);
             System.out.println("rootPath：" + rootPath);
             System.out.println("maxDepth：" + maxDepth);
+            System.out.println("总出现：" + totalCount + "次");
             result
                     .stream()
                     .sorted(Comparator.comparing(Result::getCount).reversed())
@@ -186,6 +189,10 @@ public class Practice {
 
         public void setRootPath(Path rootPath) {
             this.rootPath = rootPath;
+        }
+
+        public void setTotalCount(int totalCount) {
+            this.totalCount = totalCount;
         }
     }
 

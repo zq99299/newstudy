@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div id="app">
+    <p>请填写你的姓名和年龄，完成报名</p>
+    姓名：<input type="text" v-model="name"><br>
+    年龄：<input type="text" v-model="age"><br>
+    <button @click="submit">提交</button>
+</div>
+</body>
+<script src="https://unpkg.com/vue"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            name: '',
+            age: ''
+        },
+        methods: {
+            submit() {
+                window.location.href = "http://localhost/info.html?name=" + this.name + "&age=" + this.age
+            }
+        }
+    })
+</script>
+</html>

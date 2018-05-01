@@ -111,6 +111,7 @@ public class WebServer2 {
             }
             if (read == bufer.length) {
                 // 如果当次读取到的字符与buffer相等，那么需要清空该bufer，再次读取
+                // 偏移4是因为害怕上一次读取到数据遗留了一部分，4byte = "\r\n"
                 System.arraycopy(bufer, 0, bufer, read - 4, 4);
                 currentLength -= 4;
                 read = bis.read(bufer, 4, DEFAULT_BUFFER_SIZE - 4);

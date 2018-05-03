@@ -1,6 +1,8 @@
 package cn.mrcode.newstudy.hpbase._09;
 
+import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -33,7 +35,7 @@ public class WebServer2 {
             Properties pro = new Properties();
             pro.load(Files.newInputStream(Paths.get(rootDir, "default-mimetypes.properties")));
             mimeTyps = (Map) pro;
-            ServerSocket serverSocket = new ServerSocket(80);
+            ServerSocket serverSocket = new ServerSocket(6360);
             while (true) {
                 Socket accept = serverSocket.accept();
                 executor.execute(() -> {
@@ -72,7 +74,7 @@ public class WebServer2 {
             BufferedReader reader = new BufferedReader(new InputStreamReader(bis));
             reader.lines().forEach(System.out::println);
             // 找到请求头结尾的地方
-
+//            IOUtils.closeQuietly(bis);  // 工具类提供的安全关闭流的方法
         } catch (IOException e) {
             e.printStackTrace();
         } catch (FileUploadException e) {
@@ -82,9 +84,9 @@ public class WebServer2 {
     }
 
     private static void parseMultipart(Request request) throws IOException, FileUploadException {
-//        NanoFileUpload uploader = new NanoFileUpload(new DiskFileItemFactory());
-//        Map<String, List<FileItem>> stringListMap = uploader.parseParameterMap(request);
-//        System.out.println(stringListMap);
+        NanoFileUpload uploader = new NanoFileUpload(new DiskFileItemFactory());
+        Map<String, List<FileItem>> stringListMap = uploader.parseParameterMap(request);
+        System.out.println(stringListMap);
         BufferedInputStream bis = request.getInputStream();
         bis.mark(DEFAULT_BUFFER_SIZE);
         byte[] bufer = new byte[DEFAULT_BUFFER_SIZE];
@@ -302,4 +304,5 @@ public class WebServer2 {
             e.printStackTrace();
         }
     }
+
 }

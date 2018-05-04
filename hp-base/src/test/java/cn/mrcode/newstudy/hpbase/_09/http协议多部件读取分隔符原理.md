@@ -1,10 +1,71 @@
-fileUpload工具类中跟读源码整理：
+# http协议多部件读取分隔符原理
+
+来看一个post的multipart/form-data的请求头
 ```
-  tail : 一次读取的buffer大小(工具类中默认是4092)
-  每次从buffer中读取一个byte；
+POST / HTTP/1.1
+Host: localhost:6360
+Connection: keep-alive
+Content-Length: 343384
+User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36
+Cache-Control: no-cache
+Origin: chrome-extension://fhbjgbiflinjbdggehcddcbncdddomop
+Postman-Token: acab5971-9be5-21c4-6626-c17d6095ffd5
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryhsABXG11n88LPMza
+Accept: */*
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9
+```
+文本和二进制在一个流中，需要关注以下几个属性
+```
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryhsABXG11n88LPMza
+Content-Length: 343384
+```
+
+再来看下几个子部件的请求头和假定内容；
+第一个是一个普通的文本字段；
+第二个是一个文件，图片，二进制内容；
+需要额外注意的是boundary；这里的boundary比请求头里面的boundary多了两个--的前缀；解析的时候需要注意
+```
+------WebKitFormBoundarybJM8tewVjyBY68DJ
+Content-Disposition: form-data; name="k2"
+
+hello
+------WebKitFormBoundarybJM8tewVjyBY68DJ
+Content-Disposition: form-data; name="f3"; filename="Aoraki_ZH-CN7776353328_1920x1080.jpg"
+Content-Type: image/jpeg
+
+���� JFIF       �� C 
+```
+
+总结下格式：
+```
+POST / HTTP/1.1\r\n    - 第一行是固定的
+请求头中的k,v属性\r\n
+\r\n
+body                   - 数据
+
+multipart/form-data 的部件请求头：
+--boundary\r\n
+请求中的k,v属性；k:v[;k="v"]\r\n
+\r\n
+数据                  - 数据：如果是文件则是二进制数据，不是的话应该就是文本数据
+```
+
+## 解析核心思路
+
+1. 从头开始读取；一次读取一个byte；
+2. 寻找到分界点：
+    比如总请求头的 \r\n\r\n   (最后一个kv换行+空行)
+    比如多部件的下一个分界点 \r\n------WebKitFormBoundarybJM8tewVjyBY68DJ
+3. 根据Content-Type（总请求头和多部件文件的都有）或则filename确定是什么类型的
+
+## 核心匹配代码
+每次从buffer中读取一个byte；并且需要判定当前buffer是否已用完，用完还需要从input中读取
+```
+  tail : 一次从input流中读取到的字节个数
   head ：当前读取的标志索引；当把当前buffer读取完成之后，则再次读取一次buffer
   public byte readByte() throws IOException {
-        // Buffer depleted ?
+        // Buffer depleted ? 缓冲已用完
         if (head == tail) {
             head = 0;
             // Refill.
@@ -17,120 +78,45 @@ fileUpload工具类中跟读源码整理：
         return buffer[head++];
     }
 ```
-读取一个部件头：`Content-Disposition: form-data; name="k1"\r\n\r\n`;读取的数据存储在ByteArrayOutputStream中；
-如下面的文件部件头:
-`Content-Disposition: form-data; name="k3"; filename="power d链接数据库.txt"\r\nContent-Type: text/plain\r\n\r\n`
-读取完成之后；解析的时候是按行再解析到map中的，在其他地方再按每行进行解析
-
-核心思路：
-    每次读取一个byte；读取一个就与固定的 HEADER_SEPARATOR /r/n/r/n数组的第一个字符比较，如果相等，则i+1;
-    假设读取到了一次/r，下一次就对比是否是/n；如果不是，就把i重置为0（这个就是协议的死规定，换行+空行前面的就是头部）
-
-```java
-        int i = 0;
-        byte b;
-        // to support multi-byte characters
-        // 用来存储部件头
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        int size = 0;
-        while (i < HEADER_SEPARATOR.length) {
-            try {
-                b = readByte();
-            } catch (FileUploadIOException e) {
-                // wraps a SizeException, re-throw as it will be unwrapped later
-                throw e;
-            } catch (IOException e) {
-                throw new MalformedStreamException("Stream ended unexpectedly");
-            }
-            if (++size > HEADER_PART_SIZE_MAX) {
-                throw new MalformedStreamException(
-                        format("Header section has more than %s bytes (maybe it is not properly terminated)",
-                               Integer.valueOf(HEADER_PART_SIZE_MAX)));
-            }
-            if (b == HEADER_SEPARATOR[i]) {
-                i++;
-            } else {
-                i = 0;
-            }
-            baos.write(b);
-        }
+匹配大的请求头结尾分隔符；也就是找到body的开始索引
 ```
-
-怎么判断是否是一个文件？
-    如果是文件的话，在不部件头里面，会存在Content-type:xxx；
-    所以拿到部件头之后，还需要对头里面进行解析；获取到文件名称和文件类型
-
-找下一个分隔符：
-协议规定如下：
-```
-部件头\r\n
-空行
-内容\r\n
-------WebKitFormBoundary2JqRGwLMgEHKw8ml  所以我们要找到这里的分隔符
-```
-```
-private void findSeparator() {
-            // 记录下一个部件开始的位置
-            pos = MultipartStream.this.findSeparator();
-            if (pos == -1) {
-                if (tail - head > keepRegion) {
-                    pad = keepRegion;
-                } else {
-                    pad = tail - head;
-                }
-            }
+    byte[] HEADER_SEPARATOR = {'\r', '\n', '\r', '\n' };
+    int i = 0; // 记录匹配的连续字符数量
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    while (i < HEADER_SEPARATOR.length) {
+     byte b = readByte();
+        if (b == HEADER_SEPARATOR[i]) {
+            i++;
+        } else {
+            i = 0;
         }
-protected int findSeparator() {
-        int first;
-        int match = 0;
-        int maxpos = tail - boundaryLength;
-        // bounary = \r\n------WebKitFormBoundary2JqRGwLMgEHKw8ml
-        for (first = head; first <= maxpos && match != boundaryLength; first++) {
-            // 先找到第一个/r
-            first = findByte(boundary[0], first);
-            if (first == -1 || first > maxpos) {
-                return -1;
-            }
-             // 然后从buffer中往下找，并匹配这个串
-            for (match = 1; match < boundaryLength; match++) {
-                if (buffer[first + match] != boundary[match]) {
-                    break;
-                }
-            }
-        }
-        if (match == boundaryLength) {
-            return first - 1;
-        }
-        // 如果当前的buffer块没有找到 则返回-1
-        return -1;
+        baos.write(b);
     }
 ```
 
-没有完全的看懂怎么解析的：大体上来总结下已看懂的：
-
-1. 从上往下读取
-2. 每次读取一个byte，然后找到\r\n\r\n的地方；也就是上面 读取一个部件头的代码；
-    核心思想是:
-    ```
-    HEADER_SEPARATOR = {\r,\n,\r,\n}
-    ByteArrayOutputStream baos;
-     while (i < HEADER_SEPARATOR.length) {
-        byte b = readByte();
-        if (b == HEADER_SEPARATOR[i]) {
-                i++;
-            } else {
-                i = 0;
-            }
-            baos.write(b);
-        }
+寻找混合在二进制中的boundary；核心思想和上门的一致；只不过匹配变长了；
+```
+String boundaryHeadEnd = "\r\n" + boundaryHead;
+byte[] boundaryHeadEndBytes = boundaryHeadEnd.getBytes();
+ List<Byte> tempStore = new ArrayList<>();
+ while (ni < boundaryHeadEndBytes.length) {
+     byte b = readByte();
+     if (b == boundaryHeadEndBytes[i]) {
+         ni++;
+         tempStore.add(b);  // 由于是在匹配分界，所以该数据不能写如二进制流中，先存储在临时容器中
+     } else { // 中途发现和分解不完全匹配，那么就把临时容器中的字节全部取出来追加到之前的流中
+         ni = 0;
+         if (tempStore.isEmpty()) {
+             os.write(b);
+         } else {
+             for (Byte aByte : tempStore) {
+                 os.write(aByte);
+             }
+             os.write(b);
+             tempStore.clear();
+         }
      }
-     如果找到了换行+空行那么该循环会退出；而找到的头也在baos里面了
-    ```
-3. 找到下一个boundary分界的位置
-    ```
-    \r\n------WebKitFormBoundary2JqRGwLMgEHKw8ml
-    核心思路如第2步里面； 一个byte的对比，直到都ok。那么就找到了body的结束位置；
-    有几个地方没有看懂：
-    1. 找分界的时候没有读取input流的操作，只在buffer中 肯定会有问题
-    2. 读取的这些数据是存在什么地方的？
-    ````
+ }
+```
+
+demo版弄懂原理的代码在这里 cn.mrcode.newstudy.hpbase._09.WebServer2.parseMultipart；

@@ -1,8 +1,6 @@
 package cn.mrcode.newstudy.hpbase._09;
 
-import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -64,15 +62,15 @@ public class WebServer2 {
             LineNumberReader lineNumberReader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(headrEls)));
             Request request = preHander(accept, lineNumberReader);
             request.setInputStream(bis);
-            bis.mark(1);
+//            bis.mark(1);
             if (request.getMethod() == Method.POST && request.getContentType().getContentType().equalsIgnoreCase("multipart/form-data")) {
                 // 解析参数；这个从流中 需要定位分隔符和二进制数据
                 // 简直太难了
                 parseMultipart(request);
             }
-            bis.reset();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(bis));
-            reader.lines().forEach(System.out::println);
+//            bis.reset();
+//            BufferedReader reader = new BufferedReader(new InputStreamReader(bis));
+//            reader.lines().forEach(System.out::println);
             // 找到请求头结尾的地方
 //            IOUtils.closeQuietly(bis);  // 工具类提供的安全关闭流的方法
         } catch (IOException e) {
@@ -84,14 +82,112 @@ public class WebServer2 {
     }
 
     private static void parseMultipart(Request request) throws IOException, FileUploadException {
-        NanoFileUpload uploader = new NanoFileUpload(new DiskFileItemFactory());
-        Map<String, List<FileItem>> stringListMap = uploader.parseParameterMap(request);
-        System.out.println(stringListMap);
-        BufferedInputStream bis = request.getInputStream();
-        bis.mark(DEFAULT_BUFFER_SIZE);
-        byte[] bufer = new byte[DEFAULT_BUFFER_SIZE];
-        int read = bis.read(bufer);
-        bis.reset();
+//        NanoFileUpload uploader = new NanoFileUpload(new DiskFileItemFactory());
+//        Map<String, List<FileItem>> stringListMap = uploader.parseParameterMap(request);
+//        System.out.println(stringListMap);
+
+
+        // 得到boundary
+        ContentType contentType = request.getContentType();
+        String boundary = contentType.getBoundary();
+        String boundaryHead = "--" + boundary;
+        // 先找到部件头到body的内容
+        BufferedInputStream input = request.getInputStream();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] HEADER_SEPARATOR = {'\r', '\n', '\r', '\n' };
+        int i = 0; // 记录匹配的连续字符数量
+        byte[] buffer = new byte[4092];
+        int head = 0;
+        int read = input.read(buffer, 0, buffer.length);
+        int tail = read;
+        while (i < HEADER_SEPARATOR.length) {
+            // 缓冲消耗光了
+            if (head == tail) {
+
+            }
+            byte b = buffer[head++];
+            if (b == HEADER_SEPARATOR[i]) {
+                i++;
+            } else {
+                i = 0;
+            }
+            baos.write(b);
+        }
+        LineNumberReader headerLnr = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(baos.toByteArray())));
+        Map<String, String> multipartHeaders = new HashMap<>();
+        headerLnr.lines()
+                .forEach(lin -> {
+                    if (lin.trim().equals(boundaryHead)) {
+                        return;
+                    }
+                    int i1 = lin.indexOf(":");
+                    if (i1 == -1) {
+                        return;
+                    }
+                    String key = lin.substring(0, i1).trim();
+                    String value = lin.substring(i1 + 1).trim();
+                    multipartHeaders.put(key, value);
+                });
+        // 如果有，则标识是文件
+        if (multipartHeaders.containsKey("Content-Type")) {
+            String cd = multipartHeaders.get("Content-Disposition");
+            StringTokenizer st = new StringTokenizer(cd, ";");
+            Map<String, String> cdHeaders = new HashMap<>();
+            while (st.hasMoreTokens()) {
+                String s = st.nextToken();
+                int i1 = s.indexOf("=");
+                if (i1 == -1) {
+                    cdHeaders.put(s, null);
+                } else {
+                    String trim = s.substring(i1 + 1).trim();
+                    cdHeaders.put(s.substring(0, i1).trim(), trim.substring(1, trim.length()-1));
+                }
+            }
+
+            System.out.println(cdHeaders.get("name"));
+            String filename = cdHeaders.get("filename");
+            System.out.println(filename);
+
+            // 创建一个临时文件流
+            // 这里直接创建一个文件流
+            OutputStream os = Files.newOutputStream(Paths.get("hp-base/out/", filename));
+
+            int ni = 0;
+            String boundaryHeadEnd = "\r\n" + boundaryHead;
+            byte[] boundaryHeadEndBytes = boundaryHeadEnd.getBytes();
+            List<Byte> tempStore = new ArrayList<>();
+            while (ni < boundaryHeadEndBytes.length) {
+                // 缓冲消耗光了
+                if (head == tail) {
+                    int cTail = input.read(buffer);
+                    if (cTail == -1) {
+                        throw new RuntimeException("错误的流");
+                    }
+                    tail = cTail;
+                    head = 0;
+                }
+                byte b = buffer[head++];
+                if (b == boundaryHeadEndBytes[i]) {
+                    ni++;
+                    tempStore.add(b);
+                } else {
+                    ni = 0;
+                    if (tempStore.isEmpty()) {
+                        os.write(b);
+                    } else {
+                        for (Byte aByte : tempStore) {
+                            os.write(aByte);
+                        }
+                        os.write(b);
+                        tempStore.clear();
+                    }
+                }
+            }
+            os.flush();
+            os.close();
+        } else {
+            // 没有则标识是 普通的字段提交的
+        }
 
     }
 

@@ -105,6 +105,8 @@ public class FileBrowsingServer implements RequestHandler {
                     if (ct.equals("text/x-java-source, text/java")) {
                         ct += ";charset=utf-8";
                     }
+                    // 全部作为下载
+                    ct = null;
                 }
                 response(request, target, ct == null ? "application/octet-stream" : ct);
                 return;

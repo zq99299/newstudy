@@ -30,7 +30,9 @@ import java.util.Properties;
  */
 public class FileBrowsingServer implements RequestHandler {
     public static void main(String[] args) throws IOException {
-        new HttpServer().start(6039, new FileBrowsingServer(Paths.get("F:\\dev\\project\\newstudy\\hp-base\\src\\test\\java\\cn\\mrcode\\newstudy\\hpbase")));
+        String rootPath = "F:\\dev\\project\\newstudy\\hp-base\\src\\test\\java\\cn\\mrcode\\newstudy\\hpbase";
+        rootPath = "d:/";
+        new HttpServer().start(6039, new FileBrowsingServer(Paths.get(rootPath)));
     }
 
 
@@ -102,7 +104,7 @@ public class FileBrowsingServer implements RequestHandler {
                 if (i != -1) {
                     String type = fileName.substring(i + 1);
                     ct = mimeTyps.get(type.toLowerCase());
-                    if (ct.equals("text/x-java-source, text/java")) {
+                    if (ct != null && ct.equals("text/x-java-source, text/java")) {
                         ct += ";charset=utf-8";
                     }
                     // 全部作为下载

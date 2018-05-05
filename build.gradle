@@ -28,6 +28,9 @@ subprojects {
         mavenLocal()
         mavenCentral()
         maven { url "https://maven.repository.redhat.com/ga/" }
+        maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+        maven { url "http://maven.nuiton.org/nexus/content/groups/releases/" }
+        maven { url "https://repository.cloudera.com/artifactory/cloudera-repos/" }
     }
     //@formatter:off
     ext.junitVersion                            = "4.12"

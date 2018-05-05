@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -82,7 +83,7 @@ public class RequestWork implements Runnable {
                     request = new Request();
                     request.setMethod(Method.lookup(method));
                     request.setHeaders(headers);
-                    request.setUri(uri);
+                    request.setUri(URLDecoder.decode(uri, "utf-8"));
                     request.setProtocolVersion(version);
                     if (paramsIndex != -1) {
                         String masterUri = uri.substring(0, paramsIndex);

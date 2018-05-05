@@ -1,4 +1,4 @@
-package cn.mrcode.newstudy.hpbase._09.webserver;
+package cn.mrcode.newstudy.hpbase._09.coreserver;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -20,17 +20,13 @@ import java.util.concurrent.Executors;
 public class HttpServer {
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
-    public static void main(String[] args) throws IOException {
-        new HttpServer().start(8096);
-    }
-
-    public void start(int port) throws IOException {
+    public void start(int port, RequestHandler handler) throws IOException {
         ServerSocket ss = new ServerSocket(port);
 
         while (true) {
             try {
                 Socket socket = ss.accept();
-                executorService.execute(new RequestWork(socket));
+                executorService.execute(new RequestWork(socket, handler));
             } catch (IOException e) {
                 e.printStackTrace();
             }

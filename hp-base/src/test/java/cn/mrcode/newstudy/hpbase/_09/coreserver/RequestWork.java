@@ -1,6 +1,5 @@
-package cn.mrcode.newstudy.hpbase._09.webserver;
+package cn.mrcode.newstudy.hpbase._09.coreserver;
 
-import cn.mrcode.newstudy.hpbase._09.Method;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 /**
+ * 读取请求头如果采用了最底层的方式。那么body的读取将无法分离出去；所以该类作为一个备份记录，进行重构
  * @author : zhuqiang
  * @version : V1.0
  * @date : 2018/5/4 21:37
@@ -22,11 +22,13 @@ public class RequestWork implements Runnable {
     private int head = 0; // buffer 中当前的位置
     private int tail = 0; // 每次读取到的有效字节数量
     private byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+    private RequestHandler handler;
 
-    public RequestWork(Socket finalSocket) {
+    public RequestWork(Socket finalSocket, RequestHandler handler) {
         this.socket = finalSocket;
+        this.handler = handler;
         try {
-            input = finalSocket.getInputStream();
+            input = new BufferedInputStream(finalSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -37,6 +39,7 @@ public class RequestWork implements Runnable {
     public void run() {
         try {
             Request request = preHeader();
+            handler.handler(request);
             // 再根据解析出来的头 根据不同的type解析数据
             System.out.println(request);
         } catch (Exception e) {
@@ -47,6 +50,9 @@ public class RequestWork implements Runnable {
     }
 
     private Request preHeader() {
+        input.mark(DEFAULT_BUFFER_SIZE);
+        // 解析头不能使用这种方式来解决；因为自带的输入流不支持mark标记
+        // 所以读取
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         // 找到正文处位置
         int i = 0;
@@ -65,6 +71,7 @@ public class RequestWork implements Runnable {
         try (LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(baos.toByteArray())))) {
             String line = null;
             while ((line = reader.readLine()) != null) {
+                System.out.println(line);
                 int lineNumber = reader.getLineNumber();
                 if (lineNumber == 1) {
                     String[] els = line.split(" ");
@@ -92,7 +99,7 @@ public class RequestWork implements Runnable {
                     }
                     continue;
                 }
-                System.out.println(line);
+
                 int kvSeparatorIndex = line.indexOf(58);
                 if (kvSeparatorIndex == -1) {
                     continue;
@@ -105,6 +112,15 @@ public class RequestWork implements Runnable {
             e.printStackTrace();
         }
         request.setCookies(parseCookies(headers.get("Cookie")));
+        request.setContentType(ContentType.parse(headers.get("Content-Type")));
+        try {
+            input.reset();
+            input.skip(baos.size() - 2);
+            request.setInput(input);
+            request.setOutput(socket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return request;
     }
 

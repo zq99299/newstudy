@@ -1,5 +1,8 @@
 package cn.mrcode.newstudy.hpbase._09;
 
+import cn.mrcode.newstudy.hpbase._09.coreserver.ContentType;
+import cn.mrcode.newstudy.hpbase._09.coreserver.Method;
+
 import java.io.BufferedInputStream;
 import java.util.Map;
 

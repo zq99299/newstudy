@@ -1,4 +1,4 @@
-package cn.mrcode.newstudy.hpbase._09;
+package cn.mrcode.newstudy.hpbase._09.coreserver;
 
 /**
  * @author : zhuqiang
@@ -15,6 +15,9 @@ public class ContentType {
     }
 
     public static ContentType parse(String contentTypeheader) {
+        if (contentTypeheader == null) {
+            return null;
+        }
         if (contentTypeheader.indexOf(";") != -1) {
             String[] els = contentTypeheader.split(";");
             String ct = els[0].trim();

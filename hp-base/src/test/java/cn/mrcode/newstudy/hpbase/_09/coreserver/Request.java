@@ -1,8 +1,7 @@
-package cn.mrcode.newstudy.hpbase._09.webserver;
+package cn.mrcode.newstudy.hpbase._09.coreserver;
 
-import cn.mrcode.newstudy.hpbase._09.ContentType;
-import cn.mrcode.newstudy.hpbase._09.Method;
-
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Map;
 
 /**
@@ -18,6 +17,8 @@ public class Request {
     private Map<String, String> headers;
     private Map<String, String> cookies;
     private ContentType contentType;
+    private InputStream input;
+    private OutputStream output;
 
     public Method getMethod() {
         return method;
@@ -73,5 +74,21 @@ public class Request {
 
     public void setContentType(ContentType contentType) {
         this.contentType = contentType;
+    }
+
+    public void setInput(InputStream input) {
+        this.input = input;
+    }
+
+    public void setOutput(OutputStream output) {
+        this.output = output;
+    }
+
+    public InputStream getInput() {
+        return input;
+    }
+
+    public OutputStream getOutput() {
+        return output;
     }
 }

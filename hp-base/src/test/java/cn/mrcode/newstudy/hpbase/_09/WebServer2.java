@@ -1,5 +1,7 @@
 package cn.mrcode.newstudy.hpbase._09;
 
+import cn.mrcode.newstudy.hpbase._09.coreserver.ContentType;
+import cn.mrcode.newstudy.hpbase._09.coreserver.Method;
 import org.apache.commons.fileupload.FileUploadException;
 
 import java.io.*;

@@ -3,6 +3,10 @@ package cn.mrcode.newstudy.javasetutorial.datetime;
 import org.junit.Test;
 
 import java.time.*;
+import java.time.chrono.HijrahDate;
+import java.time.chrono.JapaneseDate;
+import java.time.chrono.MinguoDate;
+import java.time.chrono.ThaiBuddhistDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.time.format.TextStyle;
@@ -271,7 +275,7 @@ public class TestDemo {
 
     // 偏移量和时区id的用法
     @Test
-    public void fun25(){
+    public void fun25() {
         // 一个不带任何时区的时间
         LocalDateTime date = LocalDateTime.of(2018, 05, 01, 0, 0, 0);
 
@@ -296,5 +300,206 @@ public class TestDemo {
         d1.withZoneSameLocal(ZoneId.of("Asia/Yerevan"));
 
         // 上两个api的时间，
+    }
+
+    @Test
+    public void fun26() {
+        // 2000 10 15
+        LocalDate date = LocalDate.of(2000, Month.OCTOBER, 15);
+        DayOfWeek dotw = date.getDayOfWeek(); // 获取当天是周几
+        System.out.printf("%s is on a %s%n", date, dotw);
+
+        System.out.printf("first day of Month: %s%n",
+                          date.with(TemporalAdjusters.firstDayOfMonth())); // 当月第一天
+        System.out.printf("first Monday of Month: %s%n",
+                          date.with(TemporalAdjusters.firstInMonth(DayOfWeek.MONDAY))); // 当月第一个周一
+        System.out.printf("last day of Month: %s%n",
+                          date.with(TemporalAdjusters.lastDayOfMonth())); // 当月最后一天
+        System.out.printf("first day of next Month: %s%n",
+                          date.with(TemporalAdjusters.firstDayOfNextMonth())); // 基于当前月的下个月第一天
+        System.out.printf("first day of next Year: %s%n",
+                          date.with(TemporalAdjusters.firstDayOfNextYear())); // 基于当前时间 下一年的第一天
+        System.out.printf("first day of Year: %s%n",
+                          date.with(TemporalAdjusters.firstDayOfYear())); // 基于当年的第一天
+    }
+
+    @Test
+    public void fun27() {
+        LocalDate d1 = LocalDate.of(2018, 05, 13);
+        LocalDate d2 = LocalDate.of(2018, 05, 16);
+        PaydayAdjuster adjuster = new PaydayAdjuster();
+        System.out.println(d1.with(adjuster));
+        System.out.println(d2.with(adjuster));
+    }
+
+    public class PaydayAdjuster implements TemporalAdjuster {
+
+        /**
+         * The adjustInto method accepts a Temporal instance
+         * and returns an adjusted LocalDate. If the passed in
+         * parameter is not a LocalDate, then a DateTimeException is thrown.
+         */
+        public Temporal adjustInto(Temporal input) {
+            LocalDate date = LocalDate.from(input);
+            int day;
+            if (date.getDayOfMonth() < 15) {
+                day = 15;
+            } else {
+                // 如果大于15号，则当月最后一天
+                day = date.with(TemporalAdjusters.lastDayOfMonth()).getDayOfMonth();
+            }
+            date = date.withDayOfMonth(day);
+            if (date.getDayOfWeek() == DayOfWeek.SATURDAY ||
+                    date.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                // 如果是周6或周日，则当前时间的前一个星期五
+                // 也就是：如果遇到发工资那天是星期周六日的话，则提前到周五
+                date = date.with(TemporalAdjusters.previous(DayOfWeek.FRIDAY));
+            }
+
+            return input.with(date);
+        }
+    }
+
+    @Test
+    public void fun28() {
+        // 精度查询，不过返回的是英文
+        TemporalQuery<TemporalUnit> query = TemporalQueries.precision();
+        System.out.printf("LocalDate precision is %s%n",
+                          LocalDate.now().query(query));
+        System.out.printf("LocalDateTime precision is %s%n",
+                          LocalDateTime.now().query(query));
+        System.out.printf("Year precision is %s%n",
+                          Year.now().query(query));
+        System.out.printf("YearMonth precision is %s%n",
+                          YearMonth.now().query(query));
+        System.out.printf("Instant precision is %s%n",
+                          Instant.now().query(query));
+    }
+
+    /**
+     * 自定义查询
+     */
+    @Test
+    public void fun29() {
+        LocalDate date = LocalDate.now();
+        // 不使用拉姆达表达式查询
+        Boolean isFamilyVacation = date.query(new FamilyVacations());
+
+        // 使用拉姆达表达式查询
+        Boolean isFamilyBirthday = date.query(FamilyBirthdays::isFamilyBirthday);
+
+        if (isFamilyVacation.booleanValue() || isFamilyBirthday.booleanValue())
+            System.out.printf("%s 是一个重要的日子!%n", date);
+        else
+            System.out.printf("%s 不是一个重要的日子.%n", date);
+    }
+
+    public class FamilyVacations implements TemporalQuery<Boolean> {
+        @Override
+        public Boolean queryFrom(TemporalAccessor date) {
+            int month = date.get(ChronoField.MONTH_OF_YEAR);
+            int day = date.get(ChronoField.DAY_OF_MONTH);
+
+            // Disneyland over Spring Break
+            // 4月 3号 ~ 4月8号 （包括）
+            if ((month == Month.APRIL.getValue()) && ((day >= 3) && (day <= 8)))
+                return Boolean.TRUE;
+
+            // Smith family reunion on Lake Saugatuck
+            // 8月 8号~14号 （包括）
+            if ((month == Month.AUGUST.getValue()) && ((day >= 8) && (day <= 14)))
+                return Boolean.TRUE;
+
+            return Boolean.FALSE;
+        }
+    }
+
+    public static class FamilyBirthdays {
+        // 只检查月和日
+        public static Boolean isFamilyBirthday(TemporalAccessor date) {
+            int month = date.get(ChronoField.MONTH_OF_YEAR);
+            int day = date.get(ChronoField.DAY_OF_MONTH);
+
+            // Angie's 的生日是4月3号
+            if ((month == Month.APRIL.getValue()) && (day == 3))
+                return Boolean.TRUE;
+
+            // Sue's 的生日是6月18号
+            if ((month == Month.JUNE.getValue()) && (day == 18))
+                return Boolean.TRUE;
+
+            // Joe's 的生日是5月29号
+            if ((month == Month.MAY.getValue()) && (day == 29))
+                return Boolean.TRUE;
+
+            return Boolean.FALSE;
+        }
+    }
+
+    @Test
+    public void fun30() {
+        Instant start = Instant.now();
+        Duration gap = Duration.ofSeconds(10);
+        Instant later = start.plus(gap);
+        System.out.println(later);
+    }
+
+    @Test
+    public void fun31() {
+        Instant current = Instant.now();
+        // 10秒前
+        Instant previous = current.minus(10, ChronoUnit.SECONDS);
+        if (previous != null) {
+            // 计算两个时间之前间隔多少毫秒
+            long between = ChronoUnit.MILLIS.between(previous, current);
+            System.out.println(between); // 10000
+        }
+    }
+
+    @Test
+    public void fun32() {
+        LocalDate today = LocalDate.now();
+        // 1960.06.01
+        LocalDate birthday = LocalDate.of(1960, Month.JANUARY, 1);
+
+        Period p = Period.between(birthday, today);
+        long p2 = ChronoUnit.DAYS.between(birthday, today);
+        // 生活了58年，4个月，8天，总共21313天
+        System.out.println("You are " + p.getYears() + " years, " + p.getMonths() +
+                                   " months, and " + p.getDays() +
+                                   " days old. (" + p2 + " days total)");
+
+    }
+
+    @Test
+    public void fun33() {
+        LocalDateTime date = LocalDateTime.of(2013, Month.JULY, 20, 19, 30);
+        JapaneseDate jdate = JapaneseDate.from(date);
+        HijrahDate hdate = HijrahDate.from(date);
+        // 中华民国 台湾
+        MinguoDate mdate = MinguoDate.from(date);
+        ThaiBuddhistDate tdate = ThaiBuddhistDate.from(date);
+    }
+
+    @Test
+    public void fun34() {
+        Calendar now = Calendar.getInstance();
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(now.toInstant(), ZoneId.systemDefault());
+    }
+
+    @Test
+    public void fun35() {
+        GregorianCalendar cal = new GregorianCalendar();
+
+        TimeZone tz = cal.getTimeZone();
+        int tzoffset = cal.get(Calendar.ZONE_OFFSET); // 获取偏移量
+
+        ZonedDateTime zdt = cal.toZonedDateTime();
+
+        GregorianCalendar newCal = GregorianCalendar.from(zdt);
+
+        LocalDateTime ldt = zdt.toLocalDateTime();
+        LocalDate date = zdt.toLocalDate();
+        LocalTime time = zdt.toLocalTime();
     }
 }

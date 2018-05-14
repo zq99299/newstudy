@@ -29,6 +29,8 @@ public class RequestWork implements Runnable {
         this.socket = finalSocket;
         this.handler = handler;
         try {
+            // 解析头不能使用这原生流来实现；因为输入流不支持mark标记
+            // 所以包装成了支持标记的流
             input = new BufferedInputStream(finalSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
@@ -52,8 +54,6 @@ public class RequestWork implements Runnable {
 
     private Request preHeader() {
         input.mark(DEFAULT_BUFFER_SIZE);
-        // 解析头不能使用这种方式来解决；因为自带的输入流不支持mark标记
-        // 所以读取
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         // 找到正文处位置
         int i = 0;
@@ -79,25 +79,10 @@ public class RequestWork implements Runnable {
                     String method = els[0].trim();
                     String uri = els[1].trim();
                     String version = els[2].trim();
-                    int paramsIndex = uri.indexOf("?");
                     request = new Request();
                     request.setMethod(Method.lookup(method));
-                    request.setHeaders(headers);
                     request.setUri(URLDecoder.decode(uri, "utf-8"));
                     request.setProtocolVersion(version);
-                    if (paramsIndex != -1) {
-                        String masterUri = uri.substring(0, paramsIndex);
-                        request.setUri(masterUri);
-                        String paramsStr = uri.substring(paramsIndex + 1, uri.length());
-                        StringTokenizer tokenizer = new StringTokenizer(paramsStr, "&");
-                        Map<String, String> params = new HashMap<>();
-                        while (tokenizer.hasMoreTokens()) {
-                            String kvStr = tokenizer.nextToken();
-                            String[] kvEle = kvStr.split("=");
-                            params.put(kvEle[0].trim(), kvEle[1].trim());
-                        }
-                        request.setParams(params);
-                    }
                     continue;
                 }
 
@@ -106,23 +91,73 @@ public class RequestWork implements Runnable {
                     continue;
                 }
                 String k = line.substring(0, kvSeparatorIndex).trim();
-                String v = line.substring(kvSeparatorIndex + 1, line.length());
+                String v = line.substring(kvSeparatorIndex + 1, line.length()).trim();
                 headers.put(k, v);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        request.setCookies(parseCookies(headers.get("Cookie")));
+        Map<String, String> cookies = parseCookies(headers.get("Cookie"));
+        if (cookies != null) {
+            request.getCookies().putAll(cookies);
+        }
         request.setContentType(ContentType.parse(headers.get("Content-Type")));
+        request.getHeaders().putAll(headers);
         try {
             input.reset();
-            input.skip(baos.size() - 2);
+            // 跳过头+空行
+            input.skip(baos.size());
             request.setInput(input);
             request.setOutput(socket.getOutputStream());
+            parseParams(request);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return request;
+    }
+
+    private void parseParams(Request request) {
+        String uri = request.getUri();
+        int paramsIndex = uri.indexOf("?");
+        if (paramsIndex != -1) {
+            String masterUri = uri.substring(0, paramsIndex);
+            request.setUri(masterUri);
+            String paramsStr = uri.substring(paramsIndex + 1, uri.length());
+            request.getParams().putAll(getUriParams(paramsStr));
+        }
+
+        if (request.getMethod() == Method.POST
+                && request.getContentType().getContentType().equalsIgnoreCase("application/x-www-form-urlencoded")) {
+            // 读取流然后解析参数
+            BufferedInputStream bis = (BufferedInputStream) request.getInput();
+            byte[] buf = new byte[Integer.parseInt(request.getHeaders().get("Content-Length"))];
+            try {
+                bis.read(buf);
+                String paramsStr = new String(buf, 0, buf.length, "utf-8");
+                if (paramsStr != null && !paramsStr.isEmpty()) {
+                    paramsStr = URLDecoder.decode(paramsStr, "utf-8");
+                    request.getParams().putAll(getUriParams(paramsStr));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private Map<String, String> getUriParams(String paramsStr) {
+        StringTokenizer tokenizer = new StringTokenizer(paramsStr, "&");
+        Map<String, String> params = new HashMap<>();
+        while (tokenizer.hasMoreTokens()) {
+            String kvStr = tokenizer.nextToken();
+            String[] kvEle = kvStr.split("=");
+            String k = kvEle[0];
+            String v = "";
+            if (kvEle.length == 2) {
+                v = kvEle[1];
+            }
+            params.put(k, v);
+        }
+        return params;
     }
 
     private Map<String, String> parseCookies(String cookieV) {

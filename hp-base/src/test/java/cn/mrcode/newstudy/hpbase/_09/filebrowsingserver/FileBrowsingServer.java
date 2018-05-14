@@ -6,7 +6,11 @@ import cn.mrcode.newstudy.hpbase._09.coreserver.Method;
 import cn.mrcode.newstudy.hpbase._09.coreserver.Request;
 import cn.mrcode.newstudy.hpbase._09.coreserver.RequestHandler;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -98,24 +102,32 @@ public class FileBrowsingServer implements RequestHandler {
                     return;
                 }
 
-                String fileName = target.getFileName().toString();
-                int i = fileName.lastIndexOf(".");
-                String ct = null;
-                if (i != -1) {
-                    String type = fileName.substring(i + 1);
-                    ct = mimeTyps.get(type.toLowerCase());
-                    if (ct != null && ct.equals("text/x-java-source, text/java")) {
-                        ct += ";charset=utf-8";
-                    }
-                    // 全部作为下载
-                    ct = null;
+                String mimeTyp = URLConnection.guessContentTypeFromName(request.getUri());
+                if (mimeTyp == null) {
+                    mimeTyp = getMimeType(target);
                 }
-                response(request, target, ct == null ? "application/octet-stream" : ct);
+                // 全部用来下载；文件编码不太好知道，还比较麻烦；这里就不深入了
+                mimeTyp = null;
+                response(request, target, mimeTyp == null ? "application/octet-stream" : mimeTyp);
                 return;
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getMimeType(Path target) {
+        String fileName = target.getFileName().toString();
+        int i = fileName.lastIndexOf(".");
+        String ct = null;
+        if (i != -1) {
+            String type = fileName.substring(i + 1);
+            ct = mimeTyps.get(type.toLowerCase());
+            if (ct != null && ct.equals("text/x-java-source, text/java")) {
+                ct += ";charset=utf-8";
+            }
+        }
+        return ct;
     }
 
     private StringBuilder buildList(Path targetDir, String parent) throws IOException {

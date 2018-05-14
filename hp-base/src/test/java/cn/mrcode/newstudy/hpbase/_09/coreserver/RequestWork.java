@@ -160,10 +160,10 @@ public class RequestWork implements Runnable {
         return params;
     }
 
-    private Map<String, String> parseCookies(String cookieV) {
-        if (cookieV != null && !cookieV.isEmpty()) {
+    private Map<String, String> parseCookies(String cookieStr) {
+        if (cookieStr != null && !cookieStr.isEmpty()) {
             Map<String, String> cookies = new HashMap<>();
-            StringTokenizer cookieToken = new StringTokenizer(cookieV, ";");
+            StringTokenizer cookieToken = new StringTokenizer(cookieStr, ";");
             while (cookieToken.hasMoreTokens()) {
                 String[] cookEls = cookieToken.nextToken().split("=");
                 if (cookEls.length != 2) {

@@ -23,7 +23,7 @@ public class ContentType {
             String ct = els[0].trim();
             String boundary = null;
             if ("multipart/form-data".equals(ct)) {
-                boundary = els[1].split("=")[1];
+                boundary = els[1].split("=")[1].trim();
             }
             return new ContentType(ct, boundary);
         } else {

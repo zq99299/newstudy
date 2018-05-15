@@ -6,19 +6,14 @@ import cn.mrcode.newstudy.hpbase._09.coreserver.Method;
 import cn.mrcode.newstudy.hpbase._09.coreserver.Request;
 import cn.mrcode.newstudy.hpbase._09.coreserver.RequestHandler;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * 文件浏览服务
@@ -138,20 +133,21 @@ public class FileBrowsingServer implements RequestHandler {
         res.append("<ul>");
         if (!parent.equals("/")) {
             String url = parent + "..";
+            url = urlencoder(url);
             String info = ".. ↶";
-            res.append("<li><a href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
+            res.append("<li><a style=\"font-size: 50px;\" href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
         }
         final String finalParent = parent;
         Files.list(targetDir)
                 .forEach(p -> {
                     try {
                         String url = finalParent + p.getFileName();
-                        String info = null;
+                        String info = url;
+                        url = urlencoder(url);
                         if (Files.isDirectory(p)) {
-                            info = url;
                             res.append("<li><a class=\"text-white bg-dark\" href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
                         } else {
-                            info = url + "\t (" + Files.size(p) / 1024 + " KB)";
+                            info += "\t (" + Files.size(p) / 1024 + " KB)";
                             res.append("<li><a class=\"text-dark\" href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
                         }
                     } catch (IOException e) {
@@ -160,6 +156,24 @@ public class FileBrowsingServer implements RequestHandler {
                 });
         res.append("</ul>");
         return res;
+    }
+
+    /**
+     * url编码需要自己处理路径符，否则会一起编码的
+     * @param url
+     * @return
+     */
+    private String urlencoder(String url) {
+        StringTokenizer st = new StringTokenizer(url, "/");
+        StringBuilder sb = new StringBuilder();
+        while (st.hasMoreTokens()) {
+            try {
+                sb.append("/").append(URLEncoder.encode(st.nextToken(), "utf-8"));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        return sb.toString();
     }
 
     public void response(Request request, String body) throws IOException {

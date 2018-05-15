@@ -138,7 +138,7 @@ public class FileBrowsingServer implements RequestHandler {
         res.append("<ul>");
         if (!parent.equals("/")) {
             String url = parent + "..";
-            String info = "..";
+            String info = ".. ↶";
             res.append("<li><a href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
         }
         final String finalParent = parent;
@@ -148,11 +148,12 @@ public class FileBrowsingServer implements RequestHandler {
                         String url = finalParent + p.getFileName();
                         String info = null;
                         if (Files.isDirectory(p)) {
-                            info = url + "\t (目录)";
+                            info = url;
+                            res.append("<li><a class=\"text-white bg-dark\" href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
                         } else {
-                            info = url + "\t (" + Files.size(p) + "byte)";
+                            info = url + "\t (" + Files.size(p) / 1024 + " KB)";
+                            res.append("<li><a class=\"text-dark\" href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
                         }
-                        res.append("<li><a href=\"" + url + "\">" + info + "</a></li>").append(CRLF);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -162,7 +163,19 @@ public class FileBrowsingServer implements RequestHandler {
     }
 
     public void response(Request request, String body) throws IOException {
-        byte[] bodys = body.getBytes(UTF8);
+        StringBuilder bodySb = new StringBuilder();
+        bodySb.append("<!DOCTYPE html>")
+                .append("<html>")
+                .append("<head>")
+                .append("<meta charset=\"utf-8\">")
+                .append("<title>文件浏览</title>")
+                .append("<link rel=\"stylesheet\" href=\"https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css\" integrity=\"sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm\" crossorigin=\"anonymous\">")
+                .append("</head>")
+                .append("<body class=\"container\">")
+                .append(body)
+                .append("</body>")
+                .append("</html>");
+        byte[] bodys = bodySb.toString().getBytes(UTF8);
         StringBuilder res = new StringBuilder();
         res.append("HTTP/1.1 200 OK").append(CRLF)
                 .append("Date: " + new Date()).append(CRLF)

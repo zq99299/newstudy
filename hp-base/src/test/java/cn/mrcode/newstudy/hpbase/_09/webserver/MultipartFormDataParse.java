@@ -32,7 +32,7 @@ public class MultipartFormDataParse {
         this.request = request;
         input = request.getInput();
 
-        String boundary = request.getContentType().getBoundary();
+        boundary = request.getContentType().getBoundary();
         itemBoundary = itemBoundaryPrefix + boundary;
         itemBoundaryBodyEnd = "\r\n" + itemBoundary;
     }

@@ -13,6 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 实现一个处理请求的简单响应的web容器
@@ -57,7 +58,10 @@ public class WebServer implements RequestHandler {
 
     private void post(Request request) {
         if (MultipartFormDataParse.isMultipartFormData(request)) {
-            new MultipartFormDataParse(request).parse();
+            List<MultipartItem> multipartItems = new MultipartFormDataParse(request).parse();
+            for (MultipartItem multipartItem : multipartItems) {
+                System.out.println(multipartItem);
+            }
         }
     }
 

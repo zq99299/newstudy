@@ -20,4 +20,12 @@ public class MultipartItemKV extends MultipartItem {
     public void setValue(String value) {
         this.value = value;
     }
+
+    @Override
+    public String toString() {
+        return "MultipartItemKV{" +
+                "name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                '}';
+    }
 }

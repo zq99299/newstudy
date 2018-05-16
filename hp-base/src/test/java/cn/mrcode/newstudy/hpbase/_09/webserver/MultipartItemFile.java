@@ -31,4 +31,13 @@ public class MultipartItemFile extends MultipartItem {
     public void setPath(Path path) {
         this.path = path;
     }
+
+    @Override
+    public String toString() {
+        return "MultipartItemFile{" +
+                "name='" + name + '\'' +
+                ", filename='" + filename + '\'' +
+                ", path=" + path +
+                '}';
+    }
 }

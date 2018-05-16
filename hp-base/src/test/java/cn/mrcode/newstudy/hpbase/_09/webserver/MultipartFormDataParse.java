@@ -114,7 +114,8 @@ public class MultipartFormDataParse {
         String tmpdir = System.getProperty("java.io.tmpdir");
         Path tempFile = Paths.get(tmpdir, UUID.randomUUID().toString().replace("-", ""));
 
-        try (OutputStream os = Files.newOutputStream(tempFile);) {
+        // 文件写入必须使用缓冲流，因为最底层的write是同步的
+        try (BufferedOutputStream os = new BufferedOutputStream(new FileOutputStream(tempFile.toAbsolutePath().toString()));) {
             byte[] ibbe = itemBoundaryBodyEnd.getBytes();
             int i = 0;
             ArrayList<Byte> tempBody = new ArrayList<>(ibbe.length);

@@ -43,8 +43,6 @@ public class RequestWork implements Runnable {
         try {
             Request request = preHeader();
             handler.handler(request);
-            // 再根据解析出来的头 根据不同的type解析数据
-            System.out.println(request);
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -72,9 +70,9 @@ public class RequestWork implements Runnable {
         try (LineNumberReader reader = new LineNumberReader(new InputStreamReader(new ByteArrayInputStream(baos.toByteArray())))) {
             String line = null;
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
                 int lineNumber = reader.getLineNumber();
                 if (lineNumber == 1) {
+                    System.out.println(line);
                     String[] els = line.split(" ");
                     String method = els[0].trim();
                     String uri = els[1].trim();
@@ -84,6 +82,8 @@ public class RequestWork implements Runnable {
                     request.setUri(URLDecoder.decode(uri, "utf-8"));
                     request.setProtocolVersion(version);
                     continue;
+                } else {
+                    System.out.println("    " + line);
                 }
 
                 int kvSeparatorIndex = line.indexOf(58);

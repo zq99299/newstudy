@@ -24,7 +24,6 @@ public class MultipartFormDataParse {
     private String itemBoundaryPrefix = "--"; // item分割符前缀
     private String itemBoundary; // item 开始分割符
     private String itemBoundaryBodyEnd; // item结束分割符
-    private String currentItemBoundary;
     private byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
     private int totalSize = 0;
     private Request request;
@@ -61,6 +60,16 @@ public class MultipartFormDataParse {
     }
 
     private MultipartItem nextItem() {
+        /**
+         * 思路：
+         * 1. 找到item的头描述，方法与总的请求头类似，都是找\r\n\r\n
+         * 2. 解析出找到的头描述
+         * 3. 根据filename字段确定该item是否是文件或则是普通的键值对参数
+         * 4. 普通参数读取：相对简单，因为内容不会很大，直接放内存中即可；结尾就是下一个分隔符
+         * 5. 文件读取：因为文件可能比较大，使用存入临时目录，边读边写；结尾也是下一个分隔符
+         * 6. 流结尾：Content-Length 长度与已经读取到的长度; 或则是 --/r/n
+         *      --- 问题就来了：为什么读取文件可以返回-1呢？包装流也可以返回-1呢
+         */
         ByteArrayOutputStream headerBaos = findHeader();
         Map<String, String> multipartHeaders = getMultipartHeaders(headerBaos);
         Map<String, String> subHeaders = getSubHeaders(multipartHeaders);
@@ -102,9 +111,6 @@ public class MultipartFormDataParse {
                 }
             }
         }
-//            if(!tempBody.isEmpty()){
-//                currentItemBoundary =
-//            }
         MultipartItemKV kv = new MultipartItemKV(name);
         kv.setValue(itemBody.toString());
         return kv;
@@ -158,15 +164,7 @@ public class MultipartFormDataParse {
      * @return
      */
     private ByteArrayOutputStream findHeader() {
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        if (currentItemBoundary != null) {
-            try {
-                baos.write(currentItemBoundary.getBytes("utf-8"));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         int i = 0; // 记录匹配的连续字符数量
         while (i < HEADER_SEPARATOR.length) {
             byte b = readByte();

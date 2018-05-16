@@ -4,6 +4,9 @@ import cn.mrcode.newstudy.hpbase._09.coreserver.ContentType;
 import cn.mrcode.newstudy.hpbase._09.coreserver.Request;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -21,7 +24,9 @@ public class MultipartFormDataParse {
     private String itemBoundaryPrefix = "--"; // item分割符前缀
     private String itemBoundary; // item 开始分割符
     private String itemBoundaryBodyEnd; // item结束分割符
+    private String currentItemBoundary;
     private byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+    private int totalSize = 0;
     private Request request;
 
     public MultipartFormDataParse(Request request) {
@@ -43,9 +48,19 @@ public class MultipartFormDataParse {
      * 解析多部件数据
      * @return
      */
-    public Map<String, MultipartItem> parse() {
-        LinkedHashMap<String, MultipartItem> result = new LinkedHashMap<>();
+    public List<MultipartItem> parse() {
+        List<MultipartItem> result = new ArrayList<>();
+        int contentLength = Integer.parseInt(request.getHeaders().get("Content-Length"));
+        do {
+            MultipartItem item = nextItem();
+            if (item != null) {
+                result.add(item);
+            }
+        } while (totalSize != contentLength);
+        return result;
+    }
 
+    private MultipartItem nextItem() {
         ByteArrayOutputStream headerBaos = findHeader();
         Map<String, String> multipartHeaders = getMultipartHeaders(headerBaos);
         Map<String, String> subHeaders = getSubHeaders(multipartHeaders);
@@ -55,10 +70,51 @@ public class MultipartFormDataParse {
         // 如果filename有值，那么一定是一个文件
         // 否则是一个普通的kv item
         if (filename != null) {
-
+            return handlerMultipartItemFile(name, filename);
         } else {
-            // 找到item的结尾处。其实也是把body的内容找出来
-            ByteArrayOutputStream itemBody = new ByteArrayOutputStream();
+            return handlerMultipartItemKV(name);
+        }
+    }
+
+    private MultipartItem handlerMultipartItemKV(String name) {
+        // 找到item的结尾处。其实也是把body的内容找出来
+        ByteArrayOutputStream itemBody = new ByteArrayOutputStream();
+        byte[] ibbe = itemBoundaryBodyEnd.getBytes();
+        int i = 0;
+        ArrayList<Byte> tempBody = new ArrayList<>(ibbe.length);
+        while (i < ibbe.length) {
+            byte b = readByte();
+            if (b == ibbe[i]) {
+                tempBody.add(b);
+                i++;
+            } else {
+                // 不是分隔符
+                // 清空临时存储区，重置计数器
+                i = 0;
+                if (tempBody.isEmpty()) {
+                    itemBody.write(b);
+                } else {
+                    for (Byte aByte : tempBody) {
+                        itemBody.write(aByte);
+                    }
+                    itemBody.write(b);
+                    tempBody.clear();
+                }
+            }
+        }
+//            if(!tempBody.isEmpty()){
+//                currentItemBoundary =
+//            }
+        MultipartItemKV kv = new MultipartItemKV(name);
+        kv.setValue(itemBody.toString());
+        return kv;
+    }
+
+    private MultipartItem handlerMultipartItemFile(String name, String filename) {
+        String tmpdir = System.getProperty("java.io.tmpdir");
+        Path tempFile = Paths.get(tmpdir, UUID.randomUUID().toString().replace("-", ""));
+
+        try (OutputStream os = Files.newOutputStream(tempFile);) {
             byte[] ibbe = itemBoundaryBodyEnd.getBytes();
             int i = 0;
             ArrayList<Byte> tempBody = new ArrayList<>(ibbe.length);
@@ -72,21 +128,28 @@ public class MultipartFormDataParse {
                     // 清空临时存储区，重置计数器
                     i = 0;
                     if (tempBody.isEmpty()) {
-                        itemBody.write(b);
+                        os.write(b);
                     } else {
                         for (Byte aByte : tempBody) {
-                            itemBody.write(aByte);
+                            os.write(aByte);
                         }
+                        os.write(b);
                         tempBody.clear();
                     }
                 }
             }
-            MultipartItemKV kv = new MultipartItemKV(name);
-            kv.setValue(itemBody.toString());
-            result.put(name, kv);
+            os.flush();
+            if (Files.size(tempFile) == 0) {
+                return null;
+            }
+            MultipartItemFile itemFile = new MultipartItemFile(name);
+            itemFile.setFilename(filename);
+            itemFile.setPath(tempFile);
+            return itemFile;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        return result;
+        return null;
     }
 
     /**
@@ -94,7 +157,15 @@ public class MultipartFormDataParse {
      * @return
      */
     private ByteArrayOutputStream findHeader() {
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        if (currentItemBoundary != null) {
+            try {
+                baos.write(currentItemBoundary.getBytes("utf-8"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         int i = 0; // 记录匹配的连续字符数量
         while (i < HEADER_SEPARATOR.length) {
             byte b = readByte();
@@ -169,6 +240,7 @@ public class MultipartFormDataParse {
                 }
                 head = 0;
                 tail = read;
+                totalSize += read;
             } catch (IOException e) {
                 e.printStackTrace();
             }

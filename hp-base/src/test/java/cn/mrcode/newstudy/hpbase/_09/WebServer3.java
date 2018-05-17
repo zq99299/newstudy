@@ -1,5 +1,7 @@
 package cn.mrcode.newstudy.hpbase._09;
 
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -20,6 +22,10 @@ import java.util.concurrent.Executors;
  * @since 1.0.0
  */
 public class WebServer3 {
+    @Test
+    public void fun1(){
+        System.out.println('\r');
+    }
     public static void main(String[] args) throws IOException {
         ExecutorService executor = Executors.newCachedThreadPool();
         ServerSocket serverSocket = new ServerSocket(80);

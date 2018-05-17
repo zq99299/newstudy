@@ -1,5 +1,13 @@
 package cn.mrcode.newstudy.hpbase._09;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * <pre>
  *  Version         Date            Author          Description
@@ -12,7 +20,22 @@ package cn.mrcode.newstudy.hpbase._09;
  * @since 1.0.0
  */
 public class WebServer3 {
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws IOException {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        ServerSocket serverSocket = new ServerSocket(80);
+        while (true) {
+            Socket accept = serverSocket.accept();
+            executor.execute(() -> {
+                try {
+                    LineNumberReader in = new LineNumberReader(new InputStreamReader(accept.getInputStream()));
+                    String lin = null;
+                    while ((lin = in.readLine()) != null) {
+                        System.out.println(lin);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 }

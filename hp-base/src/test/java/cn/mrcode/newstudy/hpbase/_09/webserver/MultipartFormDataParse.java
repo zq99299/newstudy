@@ -69,7 +69,7 @@ public class MultipartFormDataParse {
          * 5. 文件读取：因为文件可能比较大，使用存入临时目录，边读边写；结尾也是下一个分隔符
          * 6. 流结尾：Content-Length 长度与已经读取到的长度; 或则是 --/r/n
          *      --- 问题就来了：为什么读取文件可以返回-1呢？包装流也可以返回-1呢
-         *      --- 流结尾处理得还是有问题，发现找不着结尾了
+         *      --- 流结尾偶尔处理得还是有问题，发现找不着结尾了？不知道是程序原因还是什么原因，待验证
          */
         ByteArrayOutputStream headerBaos = findHeader();
         Map<String, String> multipartHeaders = getMultipartHeaders(headerBaos);

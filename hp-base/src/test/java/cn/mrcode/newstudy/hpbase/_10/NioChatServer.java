@@ -26,6 +26,7 @@ public class NioChatServer {
 
     private Selector selector;
     private Charset charset = Charset.forName("utf-8");
+    private String userName = "系统";
     // 用来存储所有已登录用户
     private Map<String, SocketChannel> users = new HashMap<>();
 
@@ -81,6 +82,7 @@ public class NioChatServer {
         // 客户端断开链接，为什么会是一个读事件？
         try {
             SocketChannel sc = (SocketChannel) sk.channel();
+//            sc.register(selector, SelectionKey.OP_READ);
             ChatRequest chatRequest = getChatRequest(sc);
             byte type = chatRequest.getType();
             switch (type) {
@@ -95,7 +97,7 @@ public class NioChatServer {
                     break;
             }
             sk.interestOps(SelectionKey.OP_READ);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             // 如果该客户端出现了异常，则标识有可能客户端断开了链接
             sk.cancel();
@@ -110,24 +112,102 @@ public class NioChatServer {
             ChatRespones chatRespones = new ChatRespones(ChatRequest.TYPE_LOGIN);
             chatRespones.setSuccess(false);
             chatRespones.setError("用户名已存在，请更换一个用户名");
-            chatRespones.setFrom("系统");
+            chatRespones.setFrom(userName);
             sc.write(charset.encode(JSON.toJSONString(chatRespones)));
         } else {
             users.put(user, sc);
             ChatRespones chatRespones = new ChatRespones(ChatRequest.TYPE_LOGIN);
             chatRespones.setSuccess(true);
-            chatRespones.setError("欢迎加入聊天室");
-            chatRespones.setFrom("系统");
+            StringBuilder info = new StringBuilder();
+            info.append("欢迎加入聊天室").append("\r\n")
+                    .append(getRoomOnline())
+                    .append("对指定人说话可以使用@用户名 信息 的方式");
+            chatRespones.setInfo(info.toString());
+            chatRespones.setFrom(userName);
             sc.write(charset.encode(JSON.toJSONString(chatRespones)));
+
+            sendSysRoom(getRoomOnline(), user);
         }
     }
 
     private void doRoom(ChatRequest chatRequest) {
+        String from = chatRequest.getFrom();
+        ChatRespones chatRespones = new ChatRespones(ChatRequest.TYPE_ROOM);
+        chatRespones.setSuccess(true);
+        chatRespones.setFrom(from);
+        chatRespones.setInfo(chatRequest.getInfo());
+
+        users.forEach((u, socketChannel) -> {
+            if (from.equals(u)) {
+                return;
+            }
+            chatRespones.setTo(u);
+            ByteBuffer info = charset.encode(JSON.toJSONString(chatRespones));
+            try {
+                socketChannel.write(info);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
     }
 
-    private void doPrivate(ChatRequest chatRequest) {
+    private void doPrivate(ChatRequest chatRequest) throws IOException {
+        String from = chatRequest.getFrom();
+        ChatRespones chatRespones = new ChatRespones(ChatRequest.TYPE_PRIVATE);
+        chatRespones.setSuccess(true);
+        chatRespones.setFrom(from);
+        chatRespones.setInfo(chatRequest.getInfo());
+        String to = chatRequest.getTo();
+        chatRespones.setTo(to);
+        if (users.containsKey(to)) {
+            SocketChannel socketChannel = users.get(to);
+            ByteBuffer info = charset.encode(JSON.toJSONString(chatRespones));
+            socketChannel.write(info);
+        } else {
+            ChatRespones err = new ChatRespones(ChatRequest.TYPE_PRIVATE);
+            chatRespones.setSuccess(false);
+            chatRespones.setTo(from);
+            chatRespones.setError(to + " 已离线，消息未送达！");
+            chatRespones.setFrom(userName);
+            ByteBuffer info = charset.encode(JSON.toJSONString(err));
+            SocketChannel socketChannel = users.get(from);
+            socketChannel.write(info);
+        }
+    }
 
+    /**
+     * 发送聊天室的系统消息
+     * @param info
+     * @param filterUser 过滤某个用户名
+     */
+    private void sendSysRoom(String info, String filterUser) {
+        ChatRespones chatRespones = new ChatRespones(ChatRequest.TYPE_ROOM);
+        chatRespones.setSuccess(true);
+        chatRespones.setFrom(userName);
+        chatRespones.setInfo(info);
+        users.forEach((u, socketChannel) -> {
+            if (filterUser != null && filterUser.equals(u)) {
+                return;
+            }
+            chatRespones.setTo(u);
+            try {
+                socketChannel.write(charset.encode(JSON.toJSONString(chatRespones)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+    }
+
+    // 获取聊天室在线用户列表
+    private String getRoomOnline() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("目前在线用户列表：").append("\r\n");
+        for (String s : users.keySet()) {
+            sb.append("   ").append(s).append("\r\n");
+        }
+        return sb.toString();
     }
 
     private ChatRequest getChatRequest(SocketChannel sc) throws IOException {

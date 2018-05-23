@@ -11,6 +11,7 @@ public class ChatRespones {
     private boolean success; // 处理是否成功
     private String error; // 错误信息
     private String from;  // 来自谁
+    private String to; // 发送给谁
     private String info;  // 信息
 
     public ChatRespones() {
@@ -58,5 +59,13 @@ public class ChatRespones {
 
     public void setInfo(String info) {
         this.info = info;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
     }
 }

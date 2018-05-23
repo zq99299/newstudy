@@ -28,6 +28,7 @@ public class NioChatClient {
     private Selector selector;
     private Charset charset = Charset.forName("utf-8");
     private CountDownLatch login = new CountDownLatch(1);
+    private String userName = "";
 
     public void init(int port) throws IOException, InterruptedException {
         selector = Selector.open();
@@ -42,7 +43,21 @@ public class NioChatClient {
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            ByteBuffer encode = charset.encode(line);
+            ChatRequest chatRequest = new ChatRequest();
+            if (line.startsWith("@")) {
+                chatRequest.setType(ChatRequest.TYPE_PRIVATE);
+                int userSp = line.indexOf(" ");
+                if (userSp != -1) {
+                    chatRequest.setTo(line.substring(1, userSp));
+                    chatRequest.setInfo(line.substring(userSp + 1));
+                    chatRequest.setFrom(userName);
+                }
+            } else {
+                chatRequest.setType(ChatRequest.TYPE_ROOM);
+                chatRequest.setInfo(line);
+                chatRequest.setFrom(userName);
+            }
+            ByteBuffer encode = charset.encode(JSON.toJSONString(chatRequest));
             sc.write(encode);
         }
     }
@@ -101,7 +116,7 @@ public class NioChatClient {
         if (chatRespones.isSuccess()) {
             login.countDown();
             // 登录成功
-            System.out.println(chatRespones.getInfo());
+            System.out.println(chatRespones.getFrom() + " : " + chatRespones.getInfo());
             return;
         }
         System.out.println(chatRespones.getError());
@@ -109,20 +124,35 @@ public class NioChatClient {
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            ByteBuffer encode = charset.encode(line);
             ChatRequest chatRequest = new ChatRequest(ChatRequest.TYPE_LOGIN);
-            chatRequest.setUser(encode.toString());
+            chatRequest.setUser(line);
+            userName = line;
             sc.write(charset.encode(JSON.toJSONString(chatRequest)));
+            break;
         }
     }
 
     // 处理聊天室类型的信息
     private void doRoom(ChatRespones chatRespones) {
-        System.out.println("[聊天室]" + chatRespones.getFrom() + " : " + chatRespones.getInfo());
+        boolean success = chatRespones.isSuccess();
+        String info = "";
+        if (success) {
+            info = chatRespones.getInfo();
+        } else {
+            info = chatRespones.getError();
+        }
+        System.out.println("[聊天室]" + chatRespones.getFrom() + " : " + info);
     }
 
     // 处理私聊的信息
     private void doPrivate(ChatRespones chatRespones) {
-        System.out.println("[私聊]" + chatRespones.getFrom() + " : " + chatRespones.getInfo());
+        boolean success = chatRespones.isSuccess();
+        String info = "";
+        if (success) {
+            info = chatRespones.getInfo();
+        } else {
+            info = chatRespones.getError();
+        }
+        System.out.println("[私聊]" + chatRespones.getFrom() + " : " + info);
     }
 }

@@ -15,6 +15,7 @@ public class ChatRequest {
     private byte type;
     private String user;
     private String to;
+    private String from;
     private String info;
 
     public ChatRequest() {
@@ -54,5 +55,13 @@ public class ChatRequest {
 
     public void setInfo(String info) {
         this.info = info;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
     }
 }

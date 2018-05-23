@@ -43,6 +43,9 @@ public class NioChatClient {
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
+            if (line == null || line.isEmpty()) {
+                continue;
+            }
             ChatRequest chatRequest = new ChatRequest();
             if (line.startsWith("@")) {
                 chatRequest.setType(ChatRequest.TYPE_PRIVATE);
@@ -51,6 +54,9 @@ public class NioChatClient {
                     chatRequest.setTo(line.substring(1, userSp));
                     chatRequest.setInfo(line.substring(userSp + 1));
                     chatRequest.setFrom(userName);
+                } else {
+                    System.err.println("@用户名 信息 请按照此格式发送信息");
+                    continue;
                 }
             } else {
                 chatRequest.setType(ChatRequest.TYPE_ROOM);

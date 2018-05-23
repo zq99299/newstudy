@@ -87,7 +87,8 @@ public class NioChatServer {
             byte type = chatRequest.getType();
             switch (type) {
                 case ChatRequest.TYPE_LOGIN:
-                    doLogin(chatRequest, sc);
+                    String user = doLogin(chatRequest, sc);
+                    sk.attach(user);
                     break;
                 case ChatRequest.TYPE_ROOM:
                     doRoom(chatRequest);
@@ -102,11 +103,14 @@ public class NioChatServer {
             // 如果该客户端出现了异常，则标识有可能客户端断开了链接
             sk.cancel();
             IOUtils.closeQuietly(sk.channel());
+            String user = (String) sk.attachment();
+            users.remove(user);
+            sendSysRoom(user + " 离开了聊天室," + getRoomOnline(), user);
         }
     }
 
 
-    private void doLogin(ChatRequest chatRequest, SocketChannel sc) throws IOException {
+    private String doLogin(ChatRequest chatRequest, SocketChannel sc) throws IOException {
         String user = chatRequest.getUser();
         if (users.containsKey(user)) {
             ChatRespones chatRespones = new ChatRespones(ChatRequest.TYPE_LOGIN);
@@ -128,6 +132,7 @@ public class NioChatServer {
 
             sendSysRoom(getRoomOnline(), user);
         }
+        return user;
     }
 
     private void doRoom(ChatRequest chatRequest) {
@@ -166,10 +171,10 @@ public class NioChatServer {
             socketChannel.write(info);
         } else {
             ChatRespones err = new ChatRespones(ChatRequest.TYPE_PRIVATE);
-            chatRespones.setSuccess(false);
-            chatRespones.setTo(from);
-            chatRespones.setError(to + " 已离线，消息未送达！");
-            chatRespones.setFrom(userName);
+            err.setSuccess(false);
+            err.setTo(from);
+            err.setError(to + " 已离线/或用户名不对，消息未送达！");
+            err.setFrom(userName);
             ByteBuffer info = charset.encode(JSON.toJSONString(err));
             SocketChannel socketChannel = users.get(from);
             socketChannel.write(info);

@@ -5,9 +5,11 @@ import org.junit.Test;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.Iterator;
-import java.util.Scanner;
 
 /**
  * @author : zhuqiang
@@ -48,19 +50,6 @@ public class TestDemo {
                 }
             }
         }
-
-    }
-
-    @Test
-    public void server() {
-        Scanner cin = new Scanner(System.in);
-        int c = cin.nextInt();
-        System.out.println(c);
-//        System.out.println(System.console());
-//        Scanner scanner = new Scanner(System.in);
-//        System.out.println("请输入你的用户名");
-//        String s = scanner.nextLine();
-//        System.out.println();
 
     }
 }

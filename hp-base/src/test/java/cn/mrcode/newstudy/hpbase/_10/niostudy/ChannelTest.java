@@ -6,10 +6,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 通道测试
@@ -126,5 +128,125 @@ public class ChannelTest {
         fileChannel.write(ByteBuffer.wrap("xxx".getBytes()));
         fileChannel.lock();
         System.out.println(channel);
+    }
+
+    // 文件共享锁的测试实验
+    // 结果：windows下不能共享锁；会报重叠错误
+    @Test
+    public void fun6() throws IOException {
+        String file = "C:\\Users\\mrcode\\Desktop\\新建文本文档.txt";
+        RandomAccessFile raf = new RandomAccessFile(file, "r");
+        FileChannel fc = raf.getChannel();
+        FileLock lock = fc.lock(0, 10, true);
+
+        RandomAccessFile raf2 = new RandomAccessFile(file, "r");
+        FileChannel fc2 = raf2.getChannel();
+        FileLock lock2 = fc2.lock(0, 10, true);
+
+    }
+
+    // 阻塞模式的切换与锁定
+    @Test
+    public void fun7() throws IOException, InterruptedException {
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        Object blockingLock = ssc.blockingLock();
+        Thread t1 = new Thread(() -> {
+            // 现在拥有该锁，通道模式将不能被其他线程改变
+            synchronized (blockingLock) {
+                try {
+                    boolean prevState = ssc.isBlocking();
+                    System.out.println(Thread.currentThread().getName() + " : " + prevState);
+                    ssc.configureBlocking(false);
+                    TimeUnit.SECONDS.sleep(5);
+                    // 模拟在此之间进行一些操作
+                    // ssc.accept()
+                    // 在吧模式切换回去；但是有什么用处呢？
+                    ssc.configureBlocking(prevState);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Thread t2 = new Thread(() -> {
+            try {
+                // isBlocking 是同步操作，上面返回的加锁对象
+//                boolean prevState = ssc.isBlocking();
+//                System.out.println(Thread.currentThread().getName() + " : " + prevState + " 开始修改模式");
+                ssc.configureBlocking(false);
+                System.out.println(Thread.currentThread().getName() + " : 修改模式成功");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+    }
+
+    // 通道是否有一个对等的socket测试
+    // 结论有：但是ServerSocketChannel.bind后.socket()一开始是没有socket对象的
+    // 所以这个对象是在哪里创建的呢? 很疑惑
+    @Test
+    public void fun8() throws IOException {
+        ServerSocketChannel open = ServerSocketChannel.open();
+        InetSocketAddress isa = new InetSocketAddress(9656);
+//        open.bind(isa);
+        open.socket().bind(isa);
+        SocketChannel sc = open.accept(); // 如果没有绑定一个端口将会异常 NotYetBoundException
+        System.out.println("有人已链接");
+    }
+
+    @Test
+    public void fun9() throws IOException {
+        InetSocketAddress isa = new InetSocketAddress(9656);
+        SocketChannel sc = SocketChannel.open(isa);
+        sc.bind(isa);
+        System.out.println("已链接");
+    }
+
+    // 不使用选择器的时候 使用非阻塞模式
+    @Test
+    public void fun10() throws IOException, InterruptedException {
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        InetSocketAddress isa = new InetSocketAddress(9656);
+        ssc.bind(isa);
+        ssc.configureBlocking(false);
+        while (true) {
+            SocketChannel accept = ssc.accept();
+            if (accept == null) {
+                TimeUnit.MILLISECONDS.sleep(500);
+                continue;
+            }
+            System.out.println("已链接");
+        }
+    }
+
+    // fun11 和 12 测试猜测：不要ServerSocket是否可以直接链接
+    // 结论：不可以
+    @Test
+    public void fun11() throws IOException {
+        InetSocketAddress isa = new InetSocketAddress(9656);
+        SocketChannel sc = SocketChannel.open();
+        sc.bind(isa);
+        ByteBuffer buffer = ByteBuffer.allocate(10);
+        while (buffer.position() == 0) {
+            sc.read(buffer);  // 读取方法必须要链接到一个ServerSocket
+        }
+        buffer.flip();
+        System.out.println(buffer);
+    }
+
+    @Test
+    public void fun12() throws IOException {
+        InetSocketAddress isa = new InetSocketAddress(9656);
+        SocketChannel sc = SocketChannel.open();
+        sc.connect(isa);
+        System.out.println(sc.isConnectionPending());
+    }
+
+    @Test
+    public void fun13() throws IOException {
+
     }
 }

@@ -8,6 +8,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author : zhuqiang
@@ -16,19 +17,21 @@ import java.util.Iterator;
  */
 public class SelectSocketsClient {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         new SelectSocketsClient().start(9857);
     }
 
     private ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-    private void start(int port) throws IOException {
+    private void start(int port) throws IOException, InterruptedException {
         Selector selector = Selector.open();
         SocketChannel socketChannel = SocketChannel.open(new InetSocketAddress(port));
         socketChannel.configureBlocking(false);
         socketChannel.register(selector, SelectionKey.OP_READ);
         socketChannel.write(ByteBuffer.wrap("hello word 1\r\n".getBytes()));
+        TimeUnit.MILLISECONDS.sleep(500);
         socketChannel.write(ByteBuffer.wrap("hello word 2\r\n".getBytes()));
+        TimeUnit.MILLISECONDS.sleep(500);
         socketChannel.write(ByteBuffer.wrap("hello word 3\r\n".getBytes()));
         while (selector.select() > 0) {
             Iterator<SelectionKey> it = selector.selectedKeys().iterator();

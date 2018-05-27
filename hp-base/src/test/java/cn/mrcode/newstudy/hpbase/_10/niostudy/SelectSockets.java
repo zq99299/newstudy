@@ -75,7 +75,7 @@ public class SelectSockets {
         channel.write(buffer);
     }
 
-    private void readDataFromSocket(SelectionKey key) throws IOException {
+    protected void readDataFromSocket(SelectionKey key) throws IOException {
         SocketChannel socketChannel = (SocketChannel) key.channel();
         buffer.clear();
         int count;

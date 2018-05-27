@@ -40,7 +40,13 @@ public class NioChatServer {
         // ServerSocketChannel 只支持 accept事件
         ssc.register(selector, SelectionKey.OP_ACCEPT);
         // 没有事件则会阻塞
-        while (selector.select() > 0) {
+        int selectNum = 0;
+        while ((selectNum = selector.select()) > 0) {
+            // 非常重要的一点，这个数量不是已就绪通道的数量
+            // 而是上一次select调用之后已就绪通道的数量
+            // 通过打印也印证了：当不remove的话，虽然sk会存在已选择的集合中
+            // 但是select()返回的数量却不会包含上一次未处理的数量
+            System.out.println("上一个select调用之后已就绪通道的数量：" + selectNum);
             Iterator<SelectionKey> it = selector.selectedKeys().iterator();
             while (it.hasNext()) {
                 SelectionKey sk = it.next();
@@ -51,7 +57,10 @@ public class NioChatServer {
                     continue;
                 }
                 if (sk.isReadable()) {
-                    readable(sk);
+                    new Thread(() -> {
+                        readable(sk);
+                    }).start();
+//                        readable(sk);
                     continue;
                 }
             }
@@ -230,6 +239,7 @@ public class NioChatServer {
             buffer.clear();
         }
         CharBuffer decode = charset.decode(ByteBuffer.wrap(baos.toByteArray()));
+        System.out.println(decode.toString());
         return JSON.parseObject(decode.toString(), ChatRequest.class);
     }
 }

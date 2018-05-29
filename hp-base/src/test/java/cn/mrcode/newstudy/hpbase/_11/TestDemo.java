@@ -1,4 +1,4 @@
-package cn.mrcode.newstudy.hpbase._10;
+package cn.mrcode.newstudy.hpbase._11;
 
 import org.junit.Test;
 
@@ -37,19 +37,52 @@ public class TestDemo {
                     accept.configureBlocking(false);
                     accept.register(selector, SelectionKey.OP_READ);
                     accept.write(ByteBuffer.wrap("welcome to you\r\n".getBytes()));
-                    iter.remove();
                 } else if ((sk.readyOps() & SelectionKey.OP_READ) == SelectionKey.OP_READ) {
+                    System.out.println("received read event");
                     SocketChannel socketChannel = (SocketChannel) sk.channel();
                     ByteBuffer buffer = ByteBuffer.allocate(100);
-                    buffer.put("\r\nFollo you:".getBytes());
                     socketChannel.read(buffer);
+                    int sendBufferSize = socketChannel.socket().getSendBufferSize();
+                    System.out.println("send buffer size:" + sendBufferSize);
+                    buffer = ByteBuffer.allocate(sendBufferSize * 50 + 2);
+                    for (int i = 0; i < buffer.capacity() - 2; i++) {
+                        buffer.put((byte) ('a' + i % 25));
+                    }
                     buffer.put("\r\n".getBytes());
                     buffer.flip();
-                    socketChannel.write(buffer);
-
+                    write(sk, socketChannel, buffer);
+                } else if (sk.isWritable()) {
+                    System.out.println("reveived write event");
+                    SocketChannel socketChannel = (SocketChannel) sk.channel();
+                    ByteBuffer buffer = (ByteBuffer) sk.attachment();
+                    if (buffer != null) {
+                        write(sk, socketChannel, buffer);
+                    }
                 }
+                iter.remove();
             }
         }
 
+    }
+
+    int writedTotal = 0;
+
+    private void write(SelectionKey sk, SocketChannel socketChannel, ByteBuffer buffer) throws IOException {
+        int writed = socketChannel.write(buffer);
+        writedTotal += writed;
+        System.out.println("writed " + writed);
+        if (buffer.hasRemaining()) {
+            System.out.println(" not write finished ,remains " + buffer.remaining());
+            // 压缩buffer；丢弃已使用数据，把未使用数据复制到从0开始处
+            // pos = 剩余数量
+            buffer = buffer.compact();
+            buffer.flip();
+            sk.attach(buffer);
+            sk.interestOps(sk.interestOps() | SelectionKey.OP_WRITE);
+        } else {
+            System.out.println(" block write finished: writedTotal " + writedTotal + " buffer cap " + buffer.capacity());
+            sk.attach(null);
+            sk.interestOps(sk.interestOps() & ~SelectionKey.OP_WRITE);
+        }
     }
 }

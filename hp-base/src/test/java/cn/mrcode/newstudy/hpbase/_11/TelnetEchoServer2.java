@@ -22,9 +22,9 @@ import java.util.concurrent.Executors;
  * @version : V1.0
  * @date : 2018/5/29 23:25
  */
-public class TelnetEchoServer {
+public class TelnetEchoServer2 {
     public static void main(String[] args) throws IOException {
-        new TelnetEchoServer().start(9658);
+        new TelnetEchoServer2().start(9658);
     }
 
     private ExecutorService executorService = Executors.newWorkStealingPool();
@@ -54,13 +54,6 @@ public class TelnetEchoServer {
             while (it.hasNext()) {
                 SelectionKey key = it.next();
                 try {
-                    /**
-                     * 移除 和 读的关系：
-                     * 1.只读不移除：select返回之后如果客户端没有发送数据过来，则读取不到数据
-                     * 2.只移除不读：如果继续注册读事件，select返回之后，那么看到的现象就是不断的被唤醒读
-                     * 所以：需要读和移除 才是正确的处理方法
-                     */
-                    it.remove();
                     if (key.isAcceptable()) {
                         accept(key);
                     } else if (key.isReadable()) {
@@ -70,6 +63,7 @@ public class TelnetEchoServer {
                     } else {
                         System.out.println("不处理的：" + key);
                     }
+                    it.remove();
                 } catch (Exception e) {
                     e.printStackTrace();
                     // 取消key，下一次操作key将失效
@@ -101,14 +95,6 @@ public class TelnetEchoServer {
                 SocketChannel socketChannel = (SocketChannel) key.channel();
                 ByteBuffer buffer = ByteBuffer.allocate(100);
                 socketChannel.read(buffer);
-                if (key.attachment() != null) {
-                    // 因为同一个通道 使用的key是同一个
-                    // 使用这里需要等待上一次写完之后 才能继续写数据
-                    System.out.println("还有未写完的数据，当次忽略处理");
-                    key.interestOps(key.interestOps() | SelectionKey.OP_READ);
-                    key.selector().wakeup();
-                    return;
-                }
                 int sendBufferSize = socketChannel.socket().getSendBufferSize();
                 System.out.println("send buffer size:" + sendBufferSize);
                 buffer = ByteBuffer.allocate(sendBufferSize * 50 + 2);

@@ -1,4 +1,4 @@
-package cn.mrcode.newstudy.hpbase._11;
+package cn.mrcode.newstudy.hpbase._10;
 
 import org.apache.commons.io.IOUtils;
 
@@ -112,7 +112,7 @@ public class TelnetEchoServer2 {
                 key.selector().wakeup();
             } catch (Exception e) {
                 System.out.println("捕获异常‘" + e.getMessage() + "' 关闭通道");
-                // TODO: 2018/5/30 测试下关闭通道是否会取消key
+                // 关闭通道，会导致key也被注销
                 IOUtils.closeQuietly(key.channel());
                 // 让选择器在阻塞状态中立即恢复
                 key.selector().wakeup();

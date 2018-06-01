@@ -86,6 +86,11 @@ public class TelnetEchoServer {
         ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
         SocketChannel sc = ssc.accept();
         sc.configureBlocking(false);
+        // 可以通过该方法设置通道相关的配置
+        // 比如 接收缓冲区大小
+//        sc.setOption(StandardSocketOptions.SO_RCVBUF,100);
+        // 发送/write缓冲区大小
+//        sc.setOption(StandardSocketOptions.SO_SNDBUF,100);
         sc.register(key.selector(), SelectionKey.OP_READ);
         sc.write(ByteBuffer.wrap("welcome to you\r\n".getBytes()));
     }

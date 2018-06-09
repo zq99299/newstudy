@@ -22,13 +22,13 @@ import java.util.concurrent.Executors;
  * @date 2018/6/8 16:02
  * @since 1.0.0
  */
-public class ReacterServer extends Thread {
+public class RectorServer extends Thread {
     private int port;
     private Selector selector;
     //    private ExecutorService acceptEs = Executors.newCachedThreadPool();
     private ExecutorService otherEs = Executors.newCachedThreadPool();
 
-    public ReacterServer(int port) {
+    public RectorServer(int port) {
         this.port = port;
     }
 
@@ -42,7 +42,7 @@ public class ReacterServer extends Thread {
             ssc.register(selector, SelectionKey.OP_ACCEPT);
             while (true) {
                 int selectNum = selector.select();
-                System.out.println("就与事件：" + selectNum);
+                System.out.println("就绪事件：" + selectNum);
                 Set<SelectionKey> sks = selector.selectedKeys();
                 Iterator<SelectionKey> it = sks.iterator();
                 while (it.hasNext()) {
@@ -50,7 +50,18 @@ public class ReacterServer extends Thread {
                     if (sk.isAcceptable()) {
                         // 接受链接，并关联handler
                         doAccept(sk);
+                        it.remove();
                         continue;
+                    }
+                    if (sk.isReadable()) {
+                        // 更改兴趣，防止多次处理同一个事件
+                        sk.interestOps(sk.interestOps() & ~SelectionKey.OP_READ);
+                        otherEs.submit((IoHandler) sk.attachment());
+                        it.remove();
+                    } else if (sk.isWritable()) {
+                        sk.interestOps(sk.interestOps() & ~SelectionKey.OP_WRITE);
+                        otherEs.submit((IoHandler) sk.attachment());
+                        it.remove();
                     }
                 }
             }

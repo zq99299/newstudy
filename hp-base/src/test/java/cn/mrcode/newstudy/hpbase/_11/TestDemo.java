@@ -2,6 +2,12 @@ package cn.mrcode.newstudy.hpbase._11;
 
 import org.junit.Test;
 
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author : zhuqiang
  * @version : V1.0
@@ -36,5 +42,71 @@ public class TestDemo {
 //        ByteBuffer.allocate(5)
     }
 
+    @Test
+    public void fun2() throws InterruptedException {
+        ReferenceQueue<byte[]> referenceQueue = new ReferenceQueue<>();
+        Object value = new Object();
+        Map<Object, Object> map = new HashMap<>();
+
+        for (int i = 0; i < 10000; i++) {
+
+            byte[] bytes = new byte[1 * 1024 * 1024];
+
+            WeakReference<byte[]> weakReference = new WeakReference<byte[]>(bytes, referenceQueue);
+            map.put(weakReference, value);
+
+        }
+        System.out.println("map.size->" + map.size());
+        Thread thread = new Thread(() -> {
+            try {
+
+                int cnt = 0;
+
+                WeakReference<byte[]> k;
+
+                while ((k = (WeakReference) referenceQueue.remove()) != null) {
+
+                    System.out.println((cnt++) + "回收了:" + k);
+
+                }
+
+            } catch (InterruptedException e) {
+
+                //结束循环
+
+            }
+
+        });
+
+        thread.setDaemon(true);
+
+        thread.start();
+        thread.join();
+    }
+
+    @Test
+    public void fun3() throws InterruptedException {
+        ReferenceQueue<ByteBuffer> referenceQueue = new ReferenceQueue<>();
+        Map<Object, Object> map = new HashMap<>();
+        Thread thread = new Thread(() -> {
+            int cnt = 0;
+            try {
+                WeakReference k = null;
+                while ((k = (WeakReference) referenceQueue.remove()) != null) {
+                    System.out.println((cnt++) + "回收了:" + k);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        thread.start();
+        for (int i = 0; i < 10000; i++) {
+            ByteBuffer buffer = ByteBuffer.allocate(10 * 10000);
+            new WeakReference<>(buffer, referenceQueue);
+            buffer = null;
+        }
+        thread.join();
+
+    }
 }
 

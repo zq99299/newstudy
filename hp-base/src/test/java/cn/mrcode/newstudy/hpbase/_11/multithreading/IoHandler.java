@@ -154,7 +154,7 @@ public class IoHandler implements Runnable {
     public static String rootDir = IoHandler.class.getClassLoader().getResource("_11").getFile().substring(1);
     private FileChannel fileChannel = null;
     private long fileSize = 0;
-    private long lastFilePost = 0;
+    private long lastFilePos = 0;
     private long sendBufferSize;
 
     private void download() throws IOException {
@@ -179,20 +179,20 @@ public class IoHandler implements Runnable {
     }
 
     private void transferFile() throws IOException {
-        lastFilePost += fileChannel.transferTo(lastFilePost, sendBufferSize * 2, sc);
-        if (lastFilePost == fileSize) {
+        lastFilePos += fileChannel.transferTo(lastFilePos, sendBufferSize * 2, sc);
+        if (lastFilePos == fileSize) {
             // 文件已经传输完成
             // 恢复读事件
             System.out.println("文件已经下载完成");
             fileChannel.close();
             fileChannel = null;
-            lastFilePost = 0;
+            lastFilePos = 0;
             fileSize = 0;
             sk.interestOps(sk.interestOps() & ~SelectionKey.OP_WRITE);
             sk.interestOps(sk.interestOps() | SelectionKey.OP_READ);
         } else {
             sk.interestOps(sk.interestOps() | SelectionKey.OP_WRITE);
-            System.out.println(String.format("文件传输进度：%d / %d", lastFilePost, fileSize));
+            System.out.println(String.format("文件传输进度：%d / %d", lastFilePos, fileSize));
         }
         selector.wakeup();
     }

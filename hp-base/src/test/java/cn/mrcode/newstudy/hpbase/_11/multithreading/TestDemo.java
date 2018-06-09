@@ -23,7 +23,6 @@ public class TestDemo {
         new RectorServer(9000).start();
     }
 
-
     @Test
     public void fun2() throws IOException, InterruptedException {
         List<Thread> ts = IntStream.range(0, 3).mapToObj(i -> {

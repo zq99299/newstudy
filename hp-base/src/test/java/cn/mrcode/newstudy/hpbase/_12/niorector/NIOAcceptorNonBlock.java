@@ -6,6 +6,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * @author : zhuqiang
@@ -36,12 +38,19 @@ public class NIOAcceptorNonBlock extends Thread {
         while (true) {
             try {
                 selector.select();
-                SocketChannel sc = ssc.accept();
-                System.out.println("Connection Accepted " + sc.getRemoteAddress());
-                int nextReator = ++count % length;
-                rectors[nextReator].registerNewClient(sc);
-                if (count >= 10000) {
-                    count = 0;
+                Set<SelectionKey> selectionKeys = selector.selectedKeys();
+                Iterator<SelectionKey> it = selectionKeys.iterator();
+                while (it.hasNext()) {
+                    SelectionKey sk = it.next();
+                    if (sk.isAcceptable()) {
+                        SocketChannel sc = ssc.accept();
+                        System.out.println("Connection Accepted " + sc.getRemoteAddress());
+                        int nextReator = ++count % length;
+                        rectors[nextReator].registerNewClient(sc);
+                        if (count >= 10000) {
+                            count = 0;
+                        }
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();

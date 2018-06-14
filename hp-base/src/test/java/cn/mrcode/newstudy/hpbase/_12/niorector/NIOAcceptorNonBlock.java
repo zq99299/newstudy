@@ -52,6 +52,7 @@ public class NIOAcceptorNonBlock extends Thread {
                         }
                     }
                 }
+                selectionKeys.clear();
             } catch (IOException e) {
                 e.printStackTrace();
             }

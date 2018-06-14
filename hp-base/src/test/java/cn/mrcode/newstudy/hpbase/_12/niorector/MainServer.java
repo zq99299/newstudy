@@ -15,6 +15,7 @@ public class MainServer {
         ExecutorService executor = Executors.newCachedThreadPool();
         // 有几个cpu就创建几个rector
         MyNIORector[] rectors = new MyNIORector[Runtime.getRuntime().availableProcessors()];
+//        MyNIORector[] rectors = new MyNIORector[1];
         for (int i = 0; i < rectors.length; i++) {
             rectors[i] = new MyNIORector(executor);
             rectors[i].start();
@@ -22,7 +23,8 @@ public class MainServer {
 
         // 一个请求接收处理器
         // 对于服务端来说，就是一个ServerSocket用于监听客户端的链接请求
-        NIOAcceptor acceptor = new NIOAcceptor(9000, rectors);
+//        NIOAcceptor acceptor = new NIOAcceptor(9000, rectors);
+        NIOAcceptorNonBlock acceptor = new NIOAcceptorNonBlock(9000, rectors);
         acceptor.start();
     }
 }

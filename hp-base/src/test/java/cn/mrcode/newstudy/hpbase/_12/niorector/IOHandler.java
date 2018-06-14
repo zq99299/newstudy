@@ -6,6 +6,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -29,6 +30,8 @@ public abstract class IOHandler implements Runnable {
     public IOHandler(Selector selector, SocketChannel sc) throws IOException {
         this.socketChannel = sc;
         sc.configureBlocking(false); // 非阻塞模式
+        // 就算在多线程模式下：这里注册了读事件，但是客户端会阻塞到服务器响应
+        // 所以也不会接收到读事件的
         selectionKey = sc.register(selector, SelectionKey.OP_READ);
         readBuffer = ByteBuffer.allocateDirect(100);
         // 绑定会话
@@ -42,12 +45,14 @@ public abstract class IOHandler implements Runnable {
     @Override
     public void run() {
         try {
+            System.out.println(Thread.currentThread().getName() + "------------->");
+            TimeUnit.SECONDS.sleep(5);
             if (selectionKey.isReadable()) {
                 this.doHandler();
             } else if (selectionKey.isWritable()) {
                 doWriteData();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

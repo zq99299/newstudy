@@ -26,8 +26,8 @@ public class MyNIORector extends Thread {
         while (true) {
             Set<SelectionKey> selectionKeys = null;
             try {
-//                selector.select(500);
-                selector.select();
+                int selectNum = selector.select(500);
+//                selector.select()
                 selectionKeys = selector.selectedKeys();
             } catch (IOException e) {
                 e.printStackTrace();

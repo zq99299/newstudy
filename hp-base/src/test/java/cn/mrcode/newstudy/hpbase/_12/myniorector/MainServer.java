@@ -1,8 +1,6 @@
 package cn.mrcode.newstudy.hpbase._12.myniorector;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 按照已学知识点；自己实现一个简单的通用nio rector 架子
@@ -19,13 +17,13 @@ import java.util.concurrent.Executors;
  */
 public class MainServer {
     public static void main(String[] args) throws IOException {
-        ExecutorService executor = Executors.newCachedThreadPool();
-        MyNIORector[] rectors = new MyNIORector[Runtime.getRuntime().availableProcessors()];
-        for (int i = 0; i < rectors.length; i++) {
-            rectors[i] = new MyNIORector(executor);
-        }
-
-        MyNIOAcceptor acceptor = new MyNIOAcceptor(9000, rectors);
-        acceptor.start();
+        new Bootstrap().handler(selectionKey -> {
+            try {
+                return new TelnetHandler(selectionKey);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }).start(9000);
     }
 }

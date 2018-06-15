@@ -1,6 +1,7 @@
 package cn.mrcode.newstudy.hpbase._12.myniorector;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
@@ -22,9 +23,17 @@ public abstract class MyIOHandler implements Runnable {
 
     @Override
     public void run() {
+        if (sk.isReadable()) {
+            sc.read()
+        } else if (sk.isWritable()) {
 
+        }
     }
 
     /** 链接成功事件 */
     protected abstract void onConnected() throws IOException;
+
+    public void write(byte[] data) throws IOException {
+        sc.write(ByteBuffer.wrap(data));
+    }
 }

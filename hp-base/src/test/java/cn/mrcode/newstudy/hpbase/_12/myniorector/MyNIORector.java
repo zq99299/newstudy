@@ -28,10 +28,10 @@ public class MyNIORector extends Thread {
     public void registerNewClient(SocketChannel socketChannel) throws IOException {
         System.out.println(String.format("%s %s 新注册", Thread.currentThread().getName(), socketChannel.getRemoteAddress()));
         socketChannel.configureBlocking(false);
+        selector.wakeup();
         SelectionKey sk = socketChannel.register(selector, 0);
         // 需要配置业务处理器 - 然后获取在这里实例化
-        MyIOHandler myIOHandler = bootstrap.getHandlerFactory().apply(sk);
-        executor.submit(myIOHandler);
+        bootstrap.getHandlerFactory().apply(sk);
     }
 
     @Override

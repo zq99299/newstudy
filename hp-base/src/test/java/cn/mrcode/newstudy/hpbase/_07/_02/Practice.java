@@ -44,7 +44,12 @@ public class Practice {
 
     public SearchResult searchInFiles(String key) {
         int maxDepth = 8;
-        Path root = Paths.get("f:\\dev\\project\\newstudy\\hp-base\\src");
+        String dir = "f:\\dev\\project\\newstudy\\hp-base\\src";
+        return searchInFiles(key, dir, maxDepth);
+    }
+
+    public SearchResult searchInFiles(String key, String dir, int maxDepth) {
+        Path root = Paths.get(dir);
         List<Path> paths = collectPath(root, maxDepth);
 
         SubTask task = new SubTask(paths, 0, paths.size(), key);
@@ -82,7 +87,9 @@ public class Practice {
                         result.addAll(paths);
                     }
                 } else {
-                    result.add(path);
+                    if (path.toString().endsWith("java")) {
+                        result.add(path);
+                    }
                 }
             });
         } catch (IOException e) {
@@ -193,6 +200,30 @@ public class Practice {
 
         public void setTotalCount(int totalCount) {
             this.totalCount = totalCount;
+        }
+
+        public List<Result> getResult() {
+            return result;
+        }
+
+        public void setResult(List<Result> result) {
+            this.result = result;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public int getMaxDepth() {
+            return maxDepth;
+        }
+
+        public Path getRootPath() {
+            return rootPath;
+        }
+
+        public int getTotalCount() {
+            return totalCount;
         }
     }
 

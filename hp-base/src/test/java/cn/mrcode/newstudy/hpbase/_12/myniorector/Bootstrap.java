@@ -30,6 +30,7 @@ public class Bootstrap {
         MyNIORector[] rectors = new MyNIORector[Runtime.getRuntime().availableProcessors()];
         for (int i = 0; i < rectors.length; i++) {
             rectors[i] = new MyNIORector(this, executor);
+            rectors[i].start();
         }
 
         MyNIOAcceptor acceptor = new MyNIOAcceptor(port, rectors);

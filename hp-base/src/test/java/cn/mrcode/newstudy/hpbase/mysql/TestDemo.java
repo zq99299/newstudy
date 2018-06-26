@@ -118,16 +118,16 @@ public class TestDemo extends Thread {
     private void handle(byte[] data) throws IOException {
         System.out.println("data:" + data.length);
         switch (data[4]) {
-            case 0x00:
+            case 0x00:  // ok 严格的话 包长度 > 7
                 System.out.println("处理认证结果");
                 break;
-            case (byte) 0xff:
+            case (byte) 0xff: // err 错误包
                 System.out.println("不能连接到mysql");
                 break;
-            case (byte) 0xfe:
+            case (byte) 0xfe:  // eof 严格的话 包长度 < 9
                 System.out.println("0xfe");
                 break;
-            default:
+            default: // 协议字段 9 或 10；握手包/问候包
                 System.out.println("都不是，则判定是否认证过了，有可能已经认证过了");
                 // 设置握手包
 //                HandshakePacket handshakePacket = buildHandShakePacket(data);

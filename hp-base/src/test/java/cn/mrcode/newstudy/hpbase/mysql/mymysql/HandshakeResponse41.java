@@ -44,7 +44,7 @@ public class HandshakeResponse41 {
         flag |= Capabilities.CLIENT_IGNORE_SIGPIPE;
         flag |= Capabilities.CLIENT_TRANSACTIONS;
         flag |= Capabilities.CLIENT_SECURE_CONNECTION;
-//        flag |= Capabilities.CLIENT_PLUGIN_AUTH;
+        flag |= Capabilities.CLIENT_PLUGIN_AUTH;
         return flag;
     }
 

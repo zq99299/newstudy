@@ -101,6 +101,8 @@ public class HandshakeV10 extends MySQLPacket {
         // * if capabilities & CLIENT_SECURE_CONNECTION {
         // * string[$len]   auth-plugin-data-part-2 ($len=MAX(13, length of auth-plugin-data - 8))
         if ((clientCapabilities & Capabilities.CLIENT_SECURE_CONNECTION) == Capabilities.CLIENT_SECURE_CONNECTION) {
+            // 实际情况和文档有一点出入；21字节是没有问题，但是这这里的类型有问题，最后一个为0 是string.nul
+            // 暂时不知道是什么原因
 //            this.authPluginDataPart2 = msg.readByteFix(Integer.max(13, authPluginDataLen - 8));
             this.authPluginDataPart2 = msg.readBytesWithNull();
         } else {

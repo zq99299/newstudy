@@ -62,6 +62,8 @@ public class TestDemo extends Thread {
             while (buffer.hasRemaining()) {
                 channel.write(buffer);
             }
+            SelectionKey key = channel.keyFor(selector);
+            key.interestOps(key.interestOps() & ~SelectionKey.OP_WRITE);
         }
     }
 
@@ -120,6 +122,7 @@ public class TestDemo extends Thread {
         switch (data[4]) {
             case 0x00:  // ok 严格的话 包长度 > 7
                 System.out.println("处理认证结果");
+                // 发送一个查询语句
                 break;
             case (byte) 0xff: // err 错误包
                 System.out.println("不能连接到mysql");
@@ -250,6 +253,7 @@ public class TestDemo extends Thread {
             // mycat源码中在链接完成之后取消了这个sk；
             // 然后绑定了给另外一个选择器
             System.out.println("增加读写事件");
+            channel.keyFor(selector).interestOps(0);
             channel.keyFor(selector).interestOps(SelectionKey.OP_READ | SelectionKey.OP_WRITE);
 
         } else {

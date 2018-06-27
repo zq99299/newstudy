@@ -79,7 +79,7 @@ public class HandshakeResponse41 {
             throw new RuntimeException("不支持scramble411加密");
         }
 
-        byte[] password = password("123");
+        byte[] password = password("123456");
         buffer.put((byte) password.length);
         BufferUtil.writeStringFix(buffer, password);
 

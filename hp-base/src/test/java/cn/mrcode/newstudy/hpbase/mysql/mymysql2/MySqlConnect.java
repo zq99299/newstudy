@@ -22,7 +22,7 @@ public class MySqlConnect {
     private String host;
     private int port;
     private String schema;
-    private MySqlAuthHandler handler;
+    private NIOHandler handler;
     private SelectionKey processKey;
     private SocketChannel socketChannel;
     private String user;
@@ -131,6 +131,14 @@ public class MySqlConnect {
         }
     }
 
+    /**
+     * 执行sql语句
+     * @param sql
+     */
+    public void execSQL(String sql) {
+
+    }
+
     private ByteBuffer ensureFreeSpaceOfReadBuffer(ByteBuffer readBuffer, int offset, int pkgLength) {
         if (pkgLength > readBuffer.capacity()) {
             throw new IllegalArgumentException("Packet size over the limit. [pkgLength > readBuffer.capacity()]");
@@ -180,11 +188,11 @@ public class MySqlConnect {
         return schema;
     }
 
-    public void setHandler(MySqlAuthHandler handler) {
+    public void setHandler(NIOHandler handler) {
         this.handler = handler;
     }
 
-    public MySqlAuthHandler getHandler() {
+    public NIOHandler getHandler() {
         return handler;
     }
 

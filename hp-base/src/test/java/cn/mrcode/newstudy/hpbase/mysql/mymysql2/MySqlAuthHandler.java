@@ -23,7 +23,10 @@ public class MySqlAuthHandler implements NIOHandler {
         // 根据包类型 进行处理
         switch (data[4]) {
             case 0x00: //ok 包 v5.7 包长度 > 7
-                log.info("ok 包");
+                log.info("ok 包 ： 认证成功，切换到MySqlConnectHandler");
+                MySqlConnectHandler handler = new MySqlConnectHandler(connect);
+                connect.setHandler(handler);
+                connect.execSQL("select user()");
                 break;
             case (byte) 0xFF: // err包
                 log.info("err 包");

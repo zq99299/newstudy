@@ -9,8 +9,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 负责数据的正常交互
@@ -20,11 +19,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class NIORactor extends Thread {
     private Logger log = LoggerFactory.getLogger(getClass());
     private Selector selector;
-    private BlockingQueue<MySqlConnect> registerConnects;
+    private ConcurrentLinkedQueue<MySqlConnect> registerConnects;
 
     public NIORactor() throws IOException {
         this.selector = Selector.open();
-        registerConnects = new LinkedBlockingQueue();
+        registerConnects = new ConcurrentLinkedQueue();
     }
 
     @Override
@@ -50,6 +49,10 @@ public class NIORactor extends Thread {
         }
     }
 
+    /**
+     * 处理新加入的连接；完成链接的初始化
+     * @throws IOException
+     */
     private void registerConnectProcess() throws IOException {
         MySqlConnect connect = null;
         while ((connect = registerConnects.poll()) != null) {

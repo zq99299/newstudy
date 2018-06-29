@@ -37,6 +37,7 @@ public class MySqlAuthHandler implements NIOHandler {
                 HandshakeResponse41 response41 = buildHandshakeResponse41(handshakeV10);
                 ByteBuffer buffer = ByteBuffer.allocate(1024);
                 response41.write(buffer);
+                buffer.flip();
                 connect.write(buffer);
                 break;
             default:

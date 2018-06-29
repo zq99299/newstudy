@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * 链接对象，存储链接相关信息
@@ -29,6 +30,8 @@ public class MySqlConnect {
 
     private int readBufferOffset; // 最后一次读取的位置
     private ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+
+    private ConcurrentLinkedQueue<ByteBuffer> writes = new ConcurrentLinkedQueue();
 
     public static int getClientCapabilities() {
         int flag = 0;
@@ -79,13 +82,13 @@ public class MySqlConnect {
 
                 // 尝试获取下一个包
                 offset += length;
+                readBufferOffset = offset;  // 记录下一次开始读取的位置
+                readBuffer.position(position);
                 if (position == offset) {
                     // 如果当前位置已经是有效内容末尾，则跳出循环等待下一次的读
                     log.info("position == offset");
                     break;
                 }
-                readBufferOffset = offset;  // 记录下一次开始读取的位置
-                readBuffer.position(position);
                 continue;
             } else {
                 // position < limit; 由于手动控制的。所以 limit = capacity
@@ -108,7 +111,24 @@ public class MySqlConnect {
      * @param buffer
      */
     public void write(ByteBuffer buffer) {
+        writes.offer(buffer);
+        processKey.interestOps(processKey.interestOps() | SelectionKey.OP_WRITE);
+    }
 
+    /**
+     * 检查并发送
+     */
+    public void checkWrites() throws IOException {
+        // 这里先直接遍历写。阻塞的写。后面再修改成nio的写
+        ByteBuffer buffer = null;
+        while ((buffer = writes.poll()) != null) {
+            while (buffer.hasRemaining()) {
+                socketChannel.write(buffer);
+            }
+        }
+        if (writes.isEmpty()) {
+            processKey.interestOps(processKey.interestOps() & ~SelectionKey.OP_WRITE);
+        }
     }
 
     private ByteBuffer ensureFreeSpaceOfReadBuffer(ByteBuffer readBuffer, int offset, int pkgLength) {
@@ -127,7 +147,7 @@ public class MySqlConnect {
         int length = readBuffer.get(offset) & 0xFF;
         length |= (readBuffer.get(++offset) & 0xFF) << 8;
         length |= (readBuffer.get(++offset) & 0xFF) << 16;
-        return length;
+        return length + headerSize;
     }
 
     private void close() throws IOException {

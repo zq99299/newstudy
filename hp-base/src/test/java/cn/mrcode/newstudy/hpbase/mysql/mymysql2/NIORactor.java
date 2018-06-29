@@ -39,9 +39,9 @@ public class NIORactor extends Thread {
                     if (key.isConnectable()) {
                         doConnectable(key);
                     } else if (key.isReadable()) {
-
+                        ((MySqlConnect) key.attachment()).read();
                     } else if (key.isWritable()) {
-
+                        ((MySqlConnect) key.attachment()).checkWrites();
                     }
                 }
             }
@@ -71,8 +71,7 @@ public class NIORactor extends Thread {
             // 如果正处于链接过程中
             channel.finishConnect();
             log.info("已链接 " + channel.socket().getLocalPort());
-            key.interestOps(0); // 主要目的是去掉链接兴趣
-            ((MySqlConnect) key.attachment()).read();
+            key.interestOps(SelectionKey.OP_READ); // 主要目的是覆盖掉连接兴趣
         }
     }
 

@@ -21,12 +21,13 @@ public class MySqlAuthHandler implements NIOHandler {
     @Override
     public void handler(byte[] data) {
         // 根据包类型 进行处理
-        switch (data[4]) {
+        switch ((data[4] & 0xFF)) {
             case 0x00: //ok 包 v5.7 包长度 > 7
                 log.info("ok 包 ： 认证成功，切换到MySqlConnectHandler");
                 MySqlConnectHandler handler = new MySqlConnectHandler(connect);
                 connect.setHandler(handler);
-                connect.execSQL("select user()");
+//                connect.execSQL("select user()");
+                connect.execSQL("SELECT * FROM employee");
                 break;
             case (byte) 0xFF: // err包
                 log.info("err 包");
@@ -39,7 +40,7 @@ public class MySqlAuthHandler implements NIOHandler {
                 HandshakeV10 handshakeV10 = buildHandShakePacketV10(data);
                 HandshakeResponse41 response41 = buildHandshakeResponse41(handshakeV10);
                 ByteBuffer buffer = ByteBuffer.allocate(1024);
-                response41.write(buffer);
+                response41.write(buffer, connect.getCharsetIndex());
                 buffer.flip();
                 connect.write(buffer);
                 break;

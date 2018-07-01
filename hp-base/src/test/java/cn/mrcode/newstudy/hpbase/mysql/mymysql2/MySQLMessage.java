@@ -17,6 +17,10 @@ public class MySQLMessage {
         this.position = 0;
     }
 
+    public int readUB1() {
+        return data[position++] & 0xFF;
+    }
+
     /**
      * 对于int<n>来说是无符号整数，使用需要转换
      * @return
@@ -95,5 +99,51 @@ public class MySQLMessage {
 
     public boolean hasNext() {
         return position < length;
+    }
+
+    public String readStrWithLenenc() {
+        Long length = readIntWithLenenc();
+        if (length == null) return null;
+        // todo 精度不会有问题吗？
+        return readStringFix(length.intValue());
+    }
+
+    /**
+     * 读取剩余字节为字符串
+     * @return
+     */
+    public String readStringWithEOFByRemaining() {
+        return new String(readByteFix(data.length - position));
+    }
+
+    public Long readIntWithLenenc() {
+        int i = readUB1();
+        long length = 0;
+        if (i < 0xfb) {
+            length = i;
+        } else if (i == 0xFC) {
+            length = readUB2();
+        } else if (i == 0xFD) {
+            length = readUB3();
+        } else if (i == 0xFE) {
+            length = readUB8();
+        } else {
+            return null;
+        }
+        return length;
+    }
+
+    private long readUB8() {
+        final byte[] b = this.data;
+        long i = (long) b[position++] & 0xff;
+        i |= (long) (b[position++] & 0xff) << 8;
+        i |= (long) (b[position++] & 0xff) << (8 * 2);
+        i |= (long) (b[position++] & 0xff) << (8 * 3);
+        i |= (long) (b[position++] & 0xff) << (8 * 4);
+        i |= (long) (b[position++] & 0xff) << (8 * 5);
+        i |= (long) (b[position++] & 0xff) << (8 * 6);
+        i |= (long) (b[position++] & 0xff) << (8 * 7);
+        i |= (long) (b[position++] & 0xff) << (8 * 8);
+        return i;
     }
 }

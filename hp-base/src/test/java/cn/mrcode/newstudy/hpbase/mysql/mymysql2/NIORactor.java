@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -84,7 +85,7 @@ public class NIORactor extends Thread {
      * @param port
      * @param database 要链接的库
      */
-    public void register(String host, int port, String user, String passwd, String database) {
+    public void register(String host, int port, String user, String passwd, String database, String charset) {
         MySqlConnect connect = new MySqlConnect();
         connect.setHost(host);
         connect.setPort(port);
@@ -92,6 +93,8 @@ public class NIORactor extends Thread {
         connect.setUser(user);
         connect.setPasswd(passwd);
         connect.setHandler(new MySqlAuthHandler(connect));
+        connect.setCharset(Charset.forName(charset));
+        connect.setCharsetIndex("utf-8".equalsIgnoreCase(charset) ? (byte) 33 : (byte) 8);
         registerConnects.offer(connect);
     }
 }

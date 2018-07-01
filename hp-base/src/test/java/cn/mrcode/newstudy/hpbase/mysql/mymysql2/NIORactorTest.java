@@ -15,7 +15,7 @@ public class NIORactorTest {
     public void testRun() throws Exception {
         NIORactor nioRactor = new NIORactor();
         nioRactor.start();
-        nioRactor.register("localhost", 3306, "root", "123", "mycat_dev_test_1");
+        nioRactor.register("localhost", 3306, "root", "123456", "mycat_dev_test_1");
         nioRactor.join();
     }
 }

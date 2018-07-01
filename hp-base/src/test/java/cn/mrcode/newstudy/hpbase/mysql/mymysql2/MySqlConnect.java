@@ -1,5 +1,6 @@
 package cn.mrcode.newstudy.hpbase.mysql.mymysql2;
 
+import cn.mrcode.newstudy.hpbase.mysql.BufferUtil;
 import cn.mrcode.newstudy.hpbase.mysql.Capabilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -32,6 +34,8 @@ public class MySqlConnect {
     private ByteBuffer readBuffer = ByteBuffer.allocate(1024);
 
     private ConcurrentLinkedQueue<ByteBuffer> writes = new ConcurrentLinkedQueue();
+    private Charset charset;
+    private byte charsetIndex;
 
     public static int getClientCapabilities() {
         int flag = 0;
@@ -136,7 +140,21 @@ public class MySqlConnect {
      * @param sql
      */
     public void execSQL(String sql) {
-
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        buffer.position(3);
+        buffer.put((byte) 0);
+        buffer.put((byte) 3);
+        // string.eof
+        // 如果字符串是数据包的最后一个组件，那么它的长度可以从总体包长度减去当前位置来计算。
+        // 也就是说 只要是这个类型的。直接获取到包头然后 - 1个字节的命令类型 就得到长度了
+        // .eof与其他类型的不同。不需要修饰
+        buffer.put(sql.getBytes());
+        int position = buffer.position();
+        buffer.position(0);
+        BufferUtil.writeInt(buffer, position - 4);
+        buffer.position(position);
+        buffer.flip();
+        write(buffer);
     }
 
     private ByteBuffer ensureFreeSpaceOfReadBuffer(ByteBuffer readBuffer, int offset, int pkgLength) {
@@ -218,5 +236,21 @@ public class MySqlConnect {
 
     public String getPasswd() {
         return passwd;
+    }
+
+    public void setCharset(Charset charset) {
+        this.charset = charset;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public void setCharsetIndex(byte charsetIndex) {
+        this.charsetIndex = charsetIndex;
+    }
+
+    public byte getCharsetIndex() {
+        return charsetIndex;
     }
 }

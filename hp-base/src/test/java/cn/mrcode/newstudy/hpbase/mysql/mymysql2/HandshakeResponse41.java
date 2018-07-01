@@ -24,7 +24,7 @@ public class HandshakeResponse41 {
         this.handshakeV10 = handshakeV10;
     }
 
-    public void write(ByteBuffer buffer) {
+    public void write(ByteBuffer buffer, byte charetSetIndex) {
         buffer.position(3);
         buffer.put((byte) (handshakeV10.sequenceId + 1));
         // 4              capability flags   能力标识
@@ -34,7 +34,7 @@ public class HandshakeResponse41 {
         // 4              max-packet size
         BufferUtil.writeUB4(buffer, MySqlConnect.DEFAULT_PAKET_SIZE);
         // 1              character set
-        buffer.put(handshakeV10.getCharacterSet());
+        buffer.put(charetSetIndex);  // 使用的 字符集是在登录认证的时候 指定的，否则后续的数据就会乱码
         // string[23]     reserved (all [0])  占位符
         buffer.put(RESERVED);
         // string[NUL]    username

@@ -39,6 +39,9 @@ public class NIORactorTest {
         // 使用的是28的索引 gbk_chinese_ci （在win10下mysql5.7中）
         // 编码不对的话将会造成数据乱码
         // 连接命令 mysql -uroot -p123456 -P8166
+        // 测试查询语句： select * from employee;  // 观察响应结果信息
+        // 测试查询语句： select * from employee2;  // 观察错误信息
+        // 数据库测试表 cn/mrcode/newstudy/hpbase/mysql/mymysql2/test-sql.sql
         nioRactor.register("localhost", 3306, "root",
                 "123456", "mycat_dev_test_1",
                 "GBK");

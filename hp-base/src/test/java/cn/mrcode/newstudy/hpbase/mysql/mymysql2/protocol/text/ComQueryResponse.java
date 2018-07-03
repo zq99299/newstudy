@@ -2,6 +2,8 @@ package cn.mrcode.newstudy.hpbase.mysql.mymysql2.protocol.text;
 
 import cn.mrcode.newstudy.hpbase.mysql.mymysql2.ErrPacket;
 import cn.mrcode.newstudy.hpbase.mysql.mymysql2.MySQLMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.List;
  * @date : 2018/7/1 9:56
  */
 public class ComQueryResponse {
+    private Logger log = LoggerFactory.getLogger(getClass());
     private int columnCount;
     private List<Column> columns;
     private List<ComQueryResponseRow> rows;
@@ -35,14 +38,14 @@ public class ComQueryResponse {
      */
     public boolean parseAndAddColumn(byte[] data) {
         if (columnCount == columns.size()) {
-            System.out.println("列定义已经是EOF包");
+            log.info("列定义已经是EOF包");
             return true;
         }
         MySQLMessage msm = new MySQLMessage(data);
         Column column = new Column();
         int patketLength = msm.readUB3();
         byte sqid = msm.read();
-        System.out.println("patketLength " + patketLength + " ; sqid " + sqid);
+        log.info("patketLength " + patketLength + " ; sqid " + sqid);
 
         // lenenc_str
         // 目录（始终为“def”）
@@ -92,7 +95,7 @@ public class ComQueryResponse {
         MySQLMessage msm = new MySQLMessage(data);
         int patketLength = msm.readUB3();
         byte sqid = msm.read();
-        System.out.println("patketLength " + patketLength + " ; sqid " + sqid);
+        log.info("patketLength " + patketLength + " ; sqid " + sqid);
         List<String> row = new ArrayList<>(columnCount);
         for (int i = 0; i < columnCount; i++) {
             row.add(msm.readStrWithLenenc());

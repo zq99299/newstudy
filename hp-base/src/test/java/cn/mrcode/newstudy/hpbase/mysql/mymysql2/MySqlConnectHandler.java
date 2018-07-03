@@ -59,6 +59,5 @@ public class MySqlConnectHandler implements NIOHandler {
                     throw new RuntimeException("异常");
             }
         }
-        System.out.println(response);
     }
 }

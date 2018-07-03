@@ -2,6 +2,8 @@ package cn.mrcode.newstudy.hpbase.mysql.mymysql2.frontend;
 
 import cn.mrcode.newstudy.hpbase.mysql.mymysql2.MySQLMessage;
 import cn.mrcode.newstudy.hpbase.mysql.mymysql2.NIOHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.List;
@@ -13,6 +15,7 @@ import java.util.List;
  * @date : 2018/7/3 16:06
  */
 public class FrontendConnectionHandler implements NIOHandler {
+    private Logger log = LoggerFactory.getLogger(getClass());
     private FrontendConnection frontendConnection;
 
     public FrontendConnectionHandler(FrontendConnection frontendConnection) {
@@ -21,7 +24,6 @@ public class FrontendConnectionHandler implements NIOHandler {
 
     @Override
     public void handler(byte[] data) {
-        System.out.println("接收到一个查询");
         switch (data[4] & 0xFF) {
             case 3:
                 MySQLMessage msm = new MySQLMessage(data);
@@ -29,6 +31,7 @@ public class FrontendConnectionHandler implements NIOHandler {
                 msm.read();
                 msm.read();
                 String s = msm.readStringWithEOFByRemaining();
+                log.info("转发SQL：" + s);
                 frontendConnection.getMySqlConnect().execSQL(s);
                 frontendConnection.getMySqlConnect().setResponseHandler(new ResponseHandler() {
 

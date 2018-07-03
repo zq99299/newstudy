@@ -1,16 +1,19 @@
 package cn.mrcode.newstudy.hpbase.mysql.mymysql2;
 
+import cn.mrcode.newstudy.hpbase.mysql.mymysql2.frontend.FrontendConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 负责数据的正常交互
@@ -39,9 +42,11 @@ public class NIORactor extends Thread {
                     if (key.isConnectable()) {
                         doConnectable(key);
                     } else if (key.isReadable()) {
-                        ((MySqlConnect) key.attachment()).read();
+//                        ((MySqlConnect) key.attachment()).read();
+                        ((SqlConnect) key.attachment()).read();
                     } else if (key.isWritable()) {
-                        ((MySqlConnect) key.attachment()).checkWrites();
+//                        ((MySqlConnect) key.attachment()).checkWrites();
+                        ((SqlConnect) key.attachment()).checkWrites();
                     }
                 }
             }
@@ -94,7 +99,50 @@ public class NIORactor extends Thread {
         connect.setPasswd(passwd);
         connect.setHandler(new MySqlAuthHandler(connect));
         connect.setCharset(Charset.forName(charset));
-        connect.setCharsetIndex("utf-8".equalsIgnoreCase(charset) ? (byte) 33 : (byte) 8);
+        if ("utf-8".equalsIgnoreCase(charset)) {
+            connect.setCharsetIndex((byte) 33);
+        } else if ("gbk".equalsIgnoreCase(charset)) {
+            connect.setCharsetIndex((byte) 28);
+        } else {
+            connect.setCharsetIndex((byte) 8);
+        }
         registerConnects.offer(connect);
+    }
+
+    /**
+     * 当前段连接过来的时候，需要分分配一个后端连接作为与mysql交互的节点
+     * 但是之前没有设计连接池，所以这里直接写死一个；只允许接收一个前段连接
+     * {@link MySqlAuthHandler#handler(byte[])} 在验证登录成功后，赋值
+     */
+    public static volatile MySqlConnect mySqlConnect;
+
+    /**
+     * 前段交互步骤:
+     * 1. 接收前段连接
+     * 2. 发送握手包
+     * 3. 接收验证包，并响应登录成功
+     * 4. 切换验证处理器
+     * @param channel
+     */
+    public void registerFrontend(SocketChannel channel) {
+        while (mySqlConnect == null) {
+            try {
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            FrontendConnection frontendConnection = new FrontendConnection(channel);
+            frontendConnection.setSocketChannel(channel);
+            frontendConnection.setMySqlConnect(mySqlConnect);  // 为了简单直观，直接赋值一个后端连接 先走通这个流程
+            SelectionKey key = channel.register(selector, SelectionKey.OP_READ, frontendConnection);
+            frontendConnection.setProcessKey(key);
+            frontendConnection.register();
+        } catch (ClosedChannelException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -13,9 +13,10 @@ public class MySqlConnectHandler implements NIOHandler {
     private int state = 0;
     private ComQueryResponse response = null;
     private Logger log = LoggerFactory.getLogger(getClass());
+    private MySqlConnect connect;
 
     public MySqlConnectHandler(MySqlConnect connect) {
-
+        this.connect = connect;
     }
 
     @Override
@@ -34,17 +35,21 @@ public class MySqlConnectHandler implements NIOHandler {
             switch (state) {
                 case 0:  // 列个数
                     response = new ComQueryResponse((int) data[4]);
+                    response.addMysqlOriginalPacket(data);
                     state = 1;
                     break;
                 case 1: // 列定义
+                    response.addMysqlOriginalPacket(data);
                     if (response.parseAndAddColumn(data)) {
                         state = 2;
                     }
                     break;
                 case 2: // 行结果
+                    response.addMysqlOriginalPacket(data);
                     if (response.parseAndAddRow(data)) {
-                        System.out.println(response);
-                        state = 3;
+                        connect.response(response);
+                        state = 0;
+                        response = null;
                     }
                     break;
                 default:

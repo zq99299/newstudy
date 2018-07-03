@@ -17,6 +17,7 @@ public class ComQueryResponse {
     private List<Column> columns;
     private List<ComQueryResponseRow> rows;
     private ErrPacket errPacket;
+    private List<byte[]> mysqlOriginalPacket = new ArrayList<>();
 
     public ComQueryResponse(int columnCount) {
         this.columnCount = columnCount;
@@ -107,5 +108,17 @@ public class ComQueryResponse {
 
     public void setErrPacket(ErrPacket errPacket) {
         this.errPacket = errPacket;
+    }
+
+    /**
+     * 收集mysql的原始包，在本示例中，可以直接像前段连接发送该结果集
+     * @param data
+     */
+    public void addMysqlOriginalPacket(byte[] data) {
+        mysqlOriginalPacket.add(data);
+    }
+
+    public List<byte[]> getMysqlOriginalPacket() {
+        return mysqlOriginalPacket;
     }
 }

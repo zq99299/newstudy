@@ -27,7 +27,8 @@ public class MySqlAuthHandler implements NIOHandler {
                 MySqlConnectHandler handler = new MySqlConnectHandler(connect);
                 connect.setHandler(handler);
 //                connect.execSQL("select user()");
-                connect.execSQL("SELECT * FROM employee");
+//                connect.execSQL("SELECT * FROM employee");
+                NIORactor.mySqlConnect = connect;
                 break;
             case (byte) 0xFF: // err包
                 log.info("err 包");

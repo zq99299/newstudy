@@ -1,7 +1,8 @@
 package cn.mrcode.newstudy.hpbase.mysql.mymysql2;
 
-
 import cn.mrcode.newstudy.hpbase.mysql.Capabilities;
+
+import java.nio.ByteBuffer;
 
 /**
  * 服务端 -> 客户端
@@ -69,6 +70,10 @@ public class HandshakeV10 extends MySQLPacket {
 
     private byte[] authPluginDataPart2;
 
+    // ========================
+
+    private int capabilityFlag;
+
     public void read(byte[] data) {
         MySQLMessage msg = new MySQLMessage(data);
         this.payloadLength = msg.readUB3();
@@ -116,6 +121,29 @@ public class HandshakeV10 extends MySQLPacket {
         if ((clientCapabilities & Capabilities.CLIENT_PLUGIN_AUTH) == Capabilities.CLIENT_PLUGIN_AUTH) {
             this.authPluginName = msg.readStringWithNull();
         }
+    }
+
+    public ByteBuffer write() {
+        ByteBuffer buffer = ByteBuffer.allocate(1024 * 16 * 2);
+        buffer.position(3);
+        buffer.put((byte) 0);
+        buffer.put(protocolVersion);
+        BufferUtil.writeStringWithNull(buffer, serverVersion);
+        BufferUtil.writeUB4(buffer, connectionId);
+        buffer.put(authPluginDataPart1);
+        buffer.put(filler);
+        BufferUtil.writeUB2(buffer, capabilityFlag);
+        buffer.put(characterSet);
+        BufferUtil.writeUB2(buffer, statusFlags);
+        BufferUtil.writeUB2(buffer, capabilityFlag >> 16);
+        buffer.put(authPluginDataLen);
+        buffer.put(reserved);
+        buffer.put(authPluginDataPart2);
+        buffer.put((byte) 0);
+        BufferUtil.writeStringWithNull(buffer, authPluginName);
+        int position = buffer.position();
+        buffer.put(0, (byte) (position - 4));
+        return buffer;
     }
 
     public byte getProtocolVersion() {
@@ -168,5 +196,65 @@ public class HandshakeV10 extends MySQLPacket {
 
     public byte[] getAuthPluginDataPart2() {
         return authPluginDataPart2;
+    }
+
+    public void setProtocolVersion(byte protocolVersion) {
+        this.protocolVersion = protocolVersion;
+    }
+
+    public void setServerVersion(String serverVersion) {
+        this.serverVersion = serverVersion;
+    }
+
+    public void setConnectionId(long connectionId) {
+        this.connectionId = connectionId;
+    }
+
+    public void setAuthPluginDataPart1(byte[] authPluginDataPart1) {
+        this.authPluginDataPart1 = authPluginDataPart1;
+    }
+
+    public void setFiller(byte filler) {
+        this.filler = filler;
+    }
+
+    public void setCapabilityFlags(int capabilityFlags) {
+        this.capabilityFlags = capabilityFlags;
+    }
+
+    public void setCharacterSet(byte characterSet) {
+        this.characterSet = characterSet;
+    }
+
+    public void setStatusFlags(int statusFlags) {
+        this.statusFlags = statusFlags;
+    }
+
+    public void setCapabilityFlags2(int capabilityFlags2) {
+        this.capabilityFlags2 = capabilityFlags2;
+    }
+
+    public void setAuthPluginDataLen(byte authPluginDataLen) {
+        this.authPluginDataLen = authPluginDataLen;
+    }
+
+    public void setReserved(byte[] reserved) {
+        this.reserved = reserved;
+    }
+
+    public void setAuthPluginName(String authPluginName) {
+        this.authPluginName = authPluginName;
+    }
+
+    public void setAuthPluginDataPart2(byte[] authPluginDataPart2) {
+        this.authPluginDataPart2 = authPluginDataPart2;
+    }
+
+    public int getCapabilityFlag() {
+        return capabilityFlag;
+    }
+
+    public void setCapabilityFlag(int capabilityFlag) {
+        this.capabilityFlag = capabilityFlag;
     }
 }

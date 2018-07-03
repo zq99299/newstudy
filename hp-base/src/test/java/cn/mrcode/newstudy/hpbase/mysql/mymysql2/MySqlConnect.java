@@ -2,6 +2,8 @@ package cn.mrcode.newstudy.hpbase.mysql.mymysql2;
 
 import cn.mrcode.newstudy.hpbase.mysql.BufferUtil;
 import cn.mrcode.newstudy.hpbase.mysql.Capabilities;
+import cn.mrcode.newstudy.hpbase.mysql.mymysql2.frontend.ResponseHandler;
+import cn.mrcode.newstudy.hpbase.mysql.mymysql2.protocol.text.ComQueryResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author zhuqiang
  * @date 2018/6/28 14:03
  */
-public class MySqlConnect {
+public class MySqlConnect implements SqlConnect {
     private Logger log = LoggerFactory.getLogger(getClass());
     public static int DEFAULT_PAKET_SIZE = 16 * 1024 * 1024;
     private int headerSize = 4;
@@ -36,6 +38,7 @@ public class MySqlConnect {
     private ConcurrentLinkedQueue<ByteBuffer> writes = new ConcurrentLinkedQueue();
     private Charset charset;
     private byte charsetIndex;
+    private ResponseHandler responseHandler;
 
     public static int getClientCapabilities() {
         int flag = 0;
@@ -179,7 +182,17 @@ public class MySqlConnect {
     private void close() throws IOException {
         processKey.cancel();
         socketChannel.close();
-        log.info("socket closed");
+        log.error("socket closed");
+    }
+
+    /**
+     * 模拟数据回来后的 传递； mysql回来的数据，因为用的nio，所以也是异步的
+     * @param response
+     */
+    public void response(ComQueryResponse response) {
+        if (responseHandler != null) {
+            responseHandler.handl(response.getMysqlOriginalPacket());
+        }
     }
 
     public void setHost(String host) {
@@ -252,5 +265,13 @@ public class MySqlConnect {
 
     public byte getCharsetIndex() {
         return charsetIndex;
+    }
+
+    public void setResponseHandler(ResponseHandler responseHandler) {
+        this.responseHandler = responseHandler;
+    }
+
+    public ResponseHandler getResponseHandler() {
+        return responseHandler;
     }
 }

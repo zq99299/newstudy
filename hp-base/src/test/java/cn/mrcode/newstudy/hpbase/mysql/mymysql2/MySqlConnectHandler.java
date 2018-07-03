@@ -31,6 +31,9 @@ public class MySqlConnectHandler implements NIOHandler {
         int flag = data[4] & 0xFF;
         if (flag == 0xFF) {
             response = new ComQueryResponse(ErrPacket.builder(data));
+            response.addMysqlOriginalPacket(data);
+            connect.response(response);
+            state = 0;
         } else {
             switch (state) {
                 case 0:  // 列个数

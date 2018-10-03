@@ -12,8 +12,15 @@ public class LazySingleton {
      * 2. 内部持有一个实例
      */
     private static LazySingleton lazySingleton = null;
+    private static boolean flag = true;
 
     private LazySingleton() {
+        if (flag) {
+            // 构造只能被调用一次
+            flag = false;
+        } else {
+            throw new IllegalStateException("单例模式不允许使用反射创建");
+        }
     }
 
     public synchronized static LazySingleton getInstance() {

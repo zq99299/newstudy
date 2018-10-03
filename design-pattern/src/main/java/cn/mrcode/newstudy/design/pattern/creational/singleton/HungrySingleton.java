@@ -12,6 +12,9 @@ public class HungrySingleton implements Serializable {
     private final static HungrySingleton hungrySingleton = new HungrySingleton();
 
     private HungrySingleton() {
+        if (hungrySingleton != null) {
+            throw new IllegalStateException("单例模式不允许使用反射创建");
+        }
     }
 
     public static HungrySingleton getInstance() {

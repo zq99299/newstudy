@@ -11,6 +11,12 @@ public class StaticInnerClassSingleton {
         System.out.println("单例类初始化");
     }
 
+    private StaticInnerClassSingleton() {
+        if (InnerClass.instance != null) {
+            throw new IllegalStateException("单例模式不允许使用反射创建");
+        }
+    }
+
     private static class InnerClass {
         static {
             System.out.println("内部类初始化");

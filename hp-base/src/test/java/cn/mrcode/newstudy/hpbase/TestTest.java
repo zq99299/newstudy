@@ -4,11 +4,13 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
+import java.nio.channels.*;
 import java.text.MessageFormat;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 /**
@@ -112,8 +114,29 @@ public class TestTest {
     }
 
     @Test
-    public void fun5(){
+    public void fun5() {
         ByteBuffer buffer = ByteBuffer.allocate(100);
         buffer.order(ByteOrder.BIG_ENDIAN).getInt();
+    }
+
+    /** 测试 新加入的链接 attachment 的初始值是怎么来的 */
+    @Test
+    public void fun6() throws IOException, InterruptedException {
+        Selector selector = Selector.open();
+        ServerSocketChannel ssc = ServerSocketChannel.open();
+        ssc.configureBlocking(false);
+        ssc.bind(new InetSocketAddress(9966));
+        ssc.register(selector, SelectionKey.OP_ACCEPT, "sss");
+        selector.select();
+        Set<SelectionKey> keys = selector.keys();
+        System.out.println(keys);
+    }
+
+    /**
+     * 测试 新加入的链接 attachment 的初始值是怎么来的
+     */
+    @Test
+    public void fun7() throws IOException {
+        SocketChannel open = SocketChannel.open(new InetSocketAddress(9966));
     }
 }

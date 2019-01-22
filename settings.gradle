@@ -3,4 +3,5 @@ include 'javase-tutorial'
 include 'temp-test'
 include 'hp-base'
 include 'design-pattern'
+include 'elasticsearch'
 
